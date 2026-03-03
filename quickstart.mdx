@@ -1,0 +1,262 @@
+---
+title: 'Quickstart'
+description: 'Make your first API call in under 5 minutes'
+---
+
+Get started with TerraQuake API by making your first request. No authentication required for most endpoints - you can start querying earthquake data immediately.
+
+## What You'll Build
+
+In this quickstart, you'll fetch the 10 most recent earthquakes from this year and display their magnitude and location. This will teach you the basics of working with the API.
+
+<Steps>
+  <Step title="Choose Your Development Environment">
+    TerraQuake API works with any HTTP client. Pick your preferred language:
+    
+    - **cURL** - Quick testing from the command line
+    - **JavaScript** - For web applications and Node.js
+    - **Python** - For data analysis and scripts
+    
+    <Note>
+      No API key needed! Most endpoints are publicly accessible.
+    </Note>
+  </Step>
+
+  <Step title="Make Your First Request">
+    Fetch the 10 most recent earthquakes from this year:
+
+    <CodeGroup>
+    ```bash cURL
+    curl "https://api.terraquakeapi.com/v1/earthquakes/recent?limit=10"
+    ```
+
+    ```javascript JavaScript
+    // Fetch the 10 most recent earthquakes of the current year
+
+    const fetchRecentEarthquakes = async (limit = 10) => {
+      const url = `https://api.terraquakeapi.com/v1/earthquakes/recent?limit=${limit}`;
+
+      try {
+        const response = await fetch(url);
+
+        // Check HTTP status
+        if (!response.ok) {
+          throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+
+        // Validate API success response
+        if (!data.success || !Array.isArray(data.payload)) {
+          console.warn("Unexpected API response format:", data);
+          return;
+        }
+
+        // Display formatted result
+        console.log(`Showing ${data.payload.length} recent earthquakes:`);
+        data.payload.forEach(event => {
+          const props = event.properties || {};
+          const magnitude = props.mag ?? "N/A";
+          const magnitudeType = props.magType;
+          const place = props.place ?? "Unknown";
+          console.log(`• ${magnitude} ${magnitudeType} — ${place}`);
+        });
+
+      } catch (error) {
+        console.error("API Error:", error.message);
+      }
+    };
+
+    fetchRecentEarthquakes(10);
+    ```
+
+    ```python Python
+    # Fetch the 10 most recent earthquakes of the current year
+
+    import requests
+
+    url = "https://api.terraquakeapi.com/v1/earthquakes/recent"
+    params = {"limit": 10}
+
+    response = requests.get(url, params=params)
+
+    if response.status_code == 200:
+        data = response.json()
+
+        if data.get("success") and "payload" in data and isinstance(data["payload"], list):
+            if len(data["payload"]) > 0:
+                for event in data["payload"]:
+                    props = event.get("properties", {})
+                    magnitude = props.get("mag", "N/A")
+                    place = props.get("place", "Unknown")
+                    print(f"{magnitude} - {place}")
+            else:
+                print("No earthquake data found.")
+        else:
+            print("Unexpected data format or no payload.")
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+    ```
+    </CodeGroup>
+  </Step>
+
+  <Step title="Understand the Response">
+    The API returns a standardized JSON response with earthquake data in GeoJSON format:
+
+    ```json
+    {
+      "success": true,
+      "code": 200,
+      "status": "OK",
+      "message": "Earthquakes recent events",
+      "payload": [
+        {
+          "type": "Feature",
+          "properties": {
+            "eventId": 44604942,
+            "originId": 141077201,
+            "time": "2025-11-05T23:31:48.030000",
+            "author": "SURVEY-INGV-CT#KATALOC",
+            "magType": "ML",
+            "mag": 2.1,
+            "magAuthor": "--",
+            "type": "earthquake",
+            "place": "13 km SE Maletto (CT)",
+            "version": 100
+          },
+          "geometry": {
+            "type": "Point",
+            "coordinates": [14.97, 37.751, 5.5]
+          }
+        }
+      ],
+      "meta": {
+        "method": "GET",
+        "path": "/v1/earthquakes/recent?limit=10&page=1",
+        "timestamp": "2025-11-06T00:51:33.850Z"
+      },
+      "totalEarthquakes": 14157,
+      "pagination": {
+        "page": 1,
+        "totalPages": 1416,
+        "limit": 10,
+        "hasMore": true
+      }
+    }
+    ```
+
+    ### Key Response Fields
+
+    <ResponseField name="success" type="boolean">
+      Indicates if the request was successful. Always check this before processing data.
+    </ResponseField>
+
+    <ResponseField name="payload" type="array">
+      Array of earthquake features in GeoJSON format. Each feature contains:
+      - `properties.mag` - Magnitude value
+      - `properties.place` - Location description
+      - `properties.time` - When the earthquake occurred
+      - `geometry.coordinates` - [longitude, latitude, depth in km]
+    </ResponseField>
+
+    <ResponseField name="totalEarthquakes" type="integer">
+      Total number of earthquakes available (across all pages)
+    </ResponseField>
+
+    <ResponseField name="pagination" type="object">
+      Pagination info including current page, total pages, and whether more results exist
+    </ResponseField>
+
+    <Tip>
+      Coordinates follow GeoJSON convention: `[longitude, latitude, depth]` - note the order!
+    </Tip>
+  </Step>
+</Steps>
+
+## Next Steps
+
+Now that you've made your first API call, explore more features:
+
+<CardGroup cols={2}>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api/earthquakes/overview"
+  >
+    Explore all available endpoints and parameters
+  </Card>
+  
+  <Card
+    title="Filter Earthquakes"
+    icon="filter"
+    href="/guides/filtering-earthquakes"
+  >
+    Learn how to filter by magnitude, location, depth, and date range
+  </Card>
+  
+  <Card
+    title="Response Format"
+    icon="code"
+    href="/concepts/response-format"
+  >
+    Understand the structure of API responses in detail
+  </Card>
+  
+  <Card
+    title="Authentication"
+    icon="key"
+    href="/authentication"
+  >
+    Set up authentication for protected endpoints
+  </Card>
+</CardGroup>
+
+## Common Use Cases
+
+### Get Today's Earthquakes
+
+```bash
+curl "https://api.terraquakeapi.com/v1/earthquakes/today"
+```
+
+### Filter by Magnitude
+
+```bash
+curl "https://api.terraquakeapi.com/v1/earthquakes/magnitude?minMag=4.0"
+```
+
+### Find Earthquakes Near a Location
+
+```bash
+curl "https://api.terraquakeapi.com/v1/earthquakes/location?latitude=41.9028&longitude=12.4964&radius=100"
+```
+
+### Get Earthquakes by Region
+
+```bash
+curl "https://api.terraquakeapi.com/v1/earthquakes/region/Lazio"
+```
+
+<Tip>
+  All earthquake data comes directly from the Italian National Institute of Geophysics and Volcanology (INGV), ensuring accuracy and reliability.
+</Tip>
+
+## Need Help?
+
+<CardGroup cols={2}>
+  <Card
+    title="Best Practices"
+    icon="book-open"
+    href="/guides/best-practices"
+  >
+    Learn tips for efficient API usage
+  </Card>
+  
+  <Card
+    title="Error Handling"
+    icon="triangle-exclamation"
+    href="/concepts/error-handling"
+  >
+    Handle errors and edge cases gracefully
+  </Card>
+</CardGroup>

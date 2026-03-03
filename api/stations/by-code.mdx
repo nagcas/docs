@@ -1,0 +1,345 @@
+---
+title: "GET /stations/code"
+description: "Retrieve a specific seismic station by its unique code"
+---
+
+## Endpoint
+
+```
+GET https://api.terraquakeapi.com/stations/code
+```
+
+## Description
+
+Retrieves detailed information for a single seismic monitoring station based on its unique station code. The lookup is case-insensitive, meaning "ACATE", "acate", and "Acate" will all return the same result.
+
+Station codes follow FDSN naming conventions (e.g., "ACATE", "IV.ACER") and uniquely identify each monitoring station in the INGV network.
+
+## Use Cases
+
+- **Station Lookup**: Get complete details for a specific station
+- **Validation**: Verify station existence and current status
+- **Deep Dive**: Access full metadata for individual stations
+- **Integration**: Retrieve station info for event analysis workflows
+
+## Parameters
+
+<ParamField query="code" type="string" required>
+  The unique station code to search for. Case-insensitive.
+  
+  **Examples**: "ACATE", "IV.ACER", "MONC"
+  
+  **Format**: Alphanumeric, may include periods for network prefix
+</ParamField>
+
+## Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.terraquakeapi.com/stations/code?code=ACATE"
+```
+
+```javascript JavaScript
+const stationCode = "ACATE";
+const response = await fetch(
+  `https://api.terraquakeapi.com/stations/code?code=${stationCode}`
+);
+const data = await response.json();
+
+if (data.success) {
+  const station = data.payload[0];
+  console.log(`Station: ${station.$.code}`);
+  console.log(`Location: ${station.Site.Name}`);
+  console.log(`Coordinates: ${station.Latitude}, ${station.Longitude}`);
+  console.log(`Elevation: ${station.Elevation}m`);
+  console.log(`Status: ${station.$.restrictedStatus}`);
+} else {
+  console.error(data.message);
+}
+```
+
+```python Python
+import requests
+
+station_code = "ACATE"
+url = f"https://api.terraquakeapi.com/stations/code?code={station_code}"
+
+response = requests.get(url)
+data = response.json()
+
+if data.get('success'):
+    station = data['payload'][0]
+    print(f"Station: {station['$']['code']}")
+    print(f"Location: {station['Site']['Name']}")
+    print(f"Coordinates: {station['Latitude']}, {station['Longitude']}")
+    print(f"Elevation: {station['Elevation']}m")
+    print(f"Status: {station['$']['restrictedStatus']}")
+else:
+    print(f"Error: {data.get('message')}")
+```
+
+```php PHP
+<?php
+$stationCode = "ACATE";
+$url = "https://api.terraquakeapi.com/stations/code?code=" . urlencode($stationCode);
+$response = file_get_contents($url);
+$data = json_decode($response, true);
+
+if ($data['success']) {
+    $station = $data['payload'][0];
+    echo "Station: " . $station['$']['code'] . "\n";
+    echo "Location: " . $station['Site']['Name'] . "\n";
+    echo "Coordinates: " . $station['Latitude'] . ", " . $station['Longitude'] . "\n";
+    echo "Elevation: " . $station['Elevation'] . "m\n";
+    echo "Status: " . $station['$']['restrictedStatus'] . "\n";
+} else {
+    echo "Error: " . $data['message'] . "\n";
+}
+?>
+```
+
+</CodeGroup>
+
+## Response Format
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="code" type="integer">
+  HTTP status code (200 for success, 404 if station not found)
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  HTTP status message
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable message (e.g., "Station found with code 'ACATE'")
+</ResponseField>
+
+<ResponseField name="payload" type="array">
+  Array containing the matched station object (single element)
+</ResponseField>
+
+<ResponseField name="codeStation" type="string">
+  The station code that was searched for (uppercase)
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Request metadata including method, path, and timestamp
+</ResponseField>
+
+## Station Object Structure
+
+<ResponseField name="$" type="object">
+  Station metadata attributes
+  
+  <ResponseField name="code" type="string">
+    Unique station code (uppercase)
+  </ResponseField>
+  
+  <ResponseField name="name" type="string">
+    Full station name including network prefix
+  </ResponseField>
+  
+  <ResponseField name="restrictedStatus" type="string">
+    Operational status: "open", "closed", "inactive", "deprecated", or "unavailable"
+  </ResponseField>
+  
+  <ResponseField name="startDate" type="string">
+    ISO 8601 date when the station became operational
+  </ResponseField>
+  
+  <ResponseField name="endDate" type="string" optional>
+    ISO 8601 date when the station was closed (if applicable)
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="Latitude" type="float">
+  Station latitude in decimal degrees (-90 to 90)
+</ResponseField>
+
+<ResponseField name="Longitude" type="float">
+  Station longitude in decimal degrees (-180 to 180)
+</ResponseField>
+
+<ResponseField name="Elevation" type="float">
+  Station elevation above sea level in meters
+</ResponseField>
+
+<ResponseField name="Site" type="object">
+  <ResponseField name="Name" type="string">
+    Human-readable site location name
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="CreationDate" type="string">
+  ISO 8601 timestamp when the station record was created
+</ResponseField>
+
+## Response Example
+
+### Successful Response
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Station found with code 'ACATE'",
+  "payload": [
+    {
+      "$": {
+        "code": "ACATE",
+        "name": "IV.ACATE",
+        "restrictedStatus": "open",
+        "startDate": "2015-06-10T00:00:00"
+      },
+      "Latitude": 37.0287,
+      "Longitude": 14.4983,
+      "Elevation": 206.0,
+      "Site": {
+        "Name": "Acate (RG)"
+      },
+      "CreationDate": "2015-06-10T00:00:00",
+      "Channel": [
+        {
+          "$": {
+            "code": "HHE",
+            "locationCode": "",
+            "startDate": "2015-06-10T00:00:00"
+          },
+          "Latitude": 37.0287,
+          "Longitude": 14.4983,
+          "Elevation": 206.0,
+          "Depth": 0.0,
+          "Azimuth": 90.0,
+          "Dip": 0.0,
+          "Type": "CONTINUOUS",
+          "SampleRate": 100.0
+        }
+      ]
+    }
+  ],
+  "codeStation": "ACATE",
+  "meta": {
+    "method": "GET",
+    "path": "/stations/code?code=ACATE",
+    "timestamp": "2025-11-06T10:45:22.150Z"
+  }
+}
+```
+
+## Error Responses
+
+### Missing Code Parameter
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "Parameter 'code' is required"
+}
+```
+
+### Station Not Found
+
+```json
+{
+  "success": false,
+  "code": 404,
+  "status": "Not Found",
+  "message": "No station found with code 'INVALID123'"
+}
+```
+
+### Service Error
+
+```json
+{
+  "success": false,
+  "code": 500,
+  "status": "Internal Server Error",
+  "message": "Invalid station data format received"
+}
+```
+
+## Case Insensitivity
+
+The code parameter is case-insensitive. All of these requests return the same result:
+
+```bash
+# All equivalent
+curl "https://api.terraquakeapi.com/stations/code?code=ACATE"
+curl "https://api.terraquakeapi.com/stations/code?code=acate"
+curl "https://api.terraquakeapi.com/stations/code?code=Acate"
+```
+
+## Common Station Codes
+
+Here are some example station codes from the INGV network:
+
+| Code | Location | Status |
+|------|----------|--------|
+| ACATE | Acate (RG) | Open |
+| ACER | Acerenza (PZ) | Open |
+| ASSISI | Assisi (PG) | Open |
+| MONC | Montecilfone (CB) | Open |
+| NRCA | Norcia (PG) | Open |
+| PESA | Pesaro (PU) | Open |
+
+## Practical Example
+
+Check if a station is operational before using it for analysis:
+
+```javascript
+async function isStationOperational(stationCode) {
+  try {
+    const response = await fetch(
+      `https://api.terraquakeapi.com/stations/code?code=${stationCode}`
+    );
+    const data = await response.json();
+    
+    if (!data.success) {
+      console.log(`Station ${stationCode} not found`);
+      return false;
+    }
+    
+    const station = data.payload[0];
+    const isOpen = station.$.restrictedStatus === 'open';
+    
+    console.log(`Station ${stationCode} is ${isOpen ? 'operational' : 'inactive'}`);
+    return isOpen;
+    
+  } catch (error) {
+    console.error('Error checking station:', error);
+    return false;
+  }
+}
+
+// Usage
+await isStationOperational('ACATE');
+```
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Get All Stations" icon="list" href="/api/stations/get-all">
+    Browse all available stations
+  </Card>
+  
+  <Card title="Active Stations" icon="circle-check" href="/api/stations/status-open">
+    List all operational stations
+  </Card>
+  
+  <Card title="GeoJSON Format" icon="map" href="/api/stations/geojson">
+    Get station location data for mapping
+  </Card>
+  
+  <Card title="Statistics" icon="chart-simple" href="/api/stations/statistics">
+    View network statistics
+  </Card>
+</CardGroup>

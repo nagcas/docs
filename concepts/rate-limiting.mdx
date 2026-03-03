@@ -1,0 +1,363 @@
+---
+title: 'Rate Limiting'
+description: 'Understand rate limits and how to handle them in the TerraQuake API'
+---
+
+## Overview
+
+The TerraQuake API implements rate limiting to ensure fair usage and maintain service quality for all users. Rate limits are applied per IP address using a fixed window approach.
+
+## Rate Limit Configuration
+
+<Info>
+  **Default Rate Limit:** 100 requests per minute per IP address
+</Info>
+
+The API uses a fixed window rate limiting algorithm with the following configuration:
+
+- **Window Duration:** 60 seconds (1 minute)
+- **Maximum Requests:** 100 requests per IP per window
+- **Reset Behavior:** The window resets every minute
+
+### Endpoint-Specific Limits
+
+Different endpoints may have different rate limits:
+
+| Endpoint Type | Window | Max Requests | Purpose |
+|---------------|--------|--------------|----------|
+| General API (earthquakes, stations) | 1 minute | 100 | Standard endpoints |
+| Authentication | 15 minutes | 50 | Prevent brute force attacks |
+| Contact Form | 15 minutes | 20 | Prevent spam |
+
+## Rate Limit Headers
+
+Every API response includes rate limit headers to help you track your usage:
+
+```http
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1709481234
+```
+
+### Header Descriptions
+
+<ParamField header="X-RateLimit-Limit" type="integer">
+  The maximum number of requests allowed in the current window (100)
+</ParamField>
+
+<ParamField header="X-RateLimit-Remaining" type="integer">
+  The number of requests remaining in the current window
+</ParamField>
+
+<ParamField header="X-RateLimit-Reset" type="integer">
+  Unix timestamp (in seconds) when the rate limit window resets
+</ParamField>
+
+<ParamField header="Retry-After" type="integer">
+  Number of seconds to wait before retrying (only included in 429 responses)
+</ParamField>
+
+## Handling Rate Limit Errors
+
+When you exceed the rate limit, the API returns a `429 Too Many Requests` status code:
+
+### Error Response
+
+```json
+{
+  "success": false,
+  "status": 429,
+  "message": "Too many requests, please try again later.",
+  "meta": {
+    "timestamp": "2026-03-03T10:30:45.123Z"
+  }
+}
+```
+
+### Response Headers
+
+```http
+HTTP/1.1 429 Too Many Requests
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 0
+X-RateLimit-Reset: 1709481046
+Retry-After: 1
+```
+
+## Best Practices
+
+<Steps>
+  <Step title="Monitor Rate Limit Headers">
+    Always check the `X-RateLimit-Remaining` header to track your usage before making additional requests.
+    
+    ```javascript
+    const response = await fetch('https://api.terraquakeapi.com/earthquakes/recent');
+    const remaining = response.headers.get('X-RateLimit-Remaining');
+    
+    if (remaining < 10) {
+      console.warn('Approaching rate limit!');
+    }
+    ```
+  </Step>
+
+  <Step title="Implement Exponential Backoff">
+    When you receive a 429 error, wait for the duration specified in the `Retry-After` header before retrying.
+    
+    ```javascript
+    async function fetchWithRetry(url, maxRetries = 3) {
+      for (let i = 0; i < maxRetries; i++) {
+        const response = await fetch(url);
+        
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After');
+          const waitTime = retryAfter ? parseInt(retryAfter) * 1000 : 1000;
+          
+          console.log(`Rate limited. Waiting ${waitTime}ms...`);
+          await new Promise(resolve => setTimeout(resolve, waitTime));
+          continue;
+        }
+        
+        return response;
+      }
+      
+      throw new Error('Max retries exceeded');
+    }
+    ```
+  </Step>
+
+  <Step title="Cache Responses">
+    Cache API responses to reduce the number of requests. Earthquake data doesn't change frequently, so caching for 5-10 minutes is reasonable.
+    
+    ```javascript
+    const cache = new Map();
+    const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+    
+    async function getCachedEarthquakes() {
+      const cached = cache.get('recent');
+      
+      if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+        return cached.data;
+      }
+      
+      const response = await fetch('https://api.terraquakeapi.com/earthquakes/recent');
+      const data = await response.json();
+      
+      cache.set('recent', { data, timestamp: Date.now() });
+      return data;
+    }
+    ```
+  </Step>
+
+  <Step title="Use Pagination Efficiently">
+    Request only the data you need using the `limit` parameter. Don't fetch all results if you only need a subset.
+    
+    ```javascript
+    // Good: Only fetch what you need
+    const response = await fetch(
+      'https://api.terraquakeapi.com/earthquakes/recent?limit=10'
+    );
+    
+    // Avoid: Fetching more data than necessary
+    const response = await fetch(
+      'https://api.terraquakeapi.com/earthquakes/recent?limit=100'
+    );
+    ```
+  </Step>
+
+  <Step title="Batch Requests">
+    If you need to make multiple requests, space them out over time instead of sending them all at once.
+    
+    ```javascript
+    async function batchRequests(urls) {
+      const results = [];
+      
+      for (const url of urls) {
+        const response = await fetch(url);
+        results.push(await response.json());
+        
+        // Wait 100ms between requests
+        await new Promise(resolve => setTimeout(resolve, 100));
+      }
+      
+      return results;
+    }
+    ```
+  </Step>
+</Steps>
+
+## Code Examples
+
+<CodeGroup>
+
+```javascript JavaScript
+class TerraQuakeClient {
+  constructor() {
+    this.baseURL = 'https://api.terraquakeapi.com';
+    this.rateLimit = { remaining: 100, reset: Date.now() };
+  }
+
+  async request(endpoint) {
+    // Wait if rate limit is exhausted
+    if (this.rateLimit.remaining === 0) {
+      const waitTime = this.rateLimit.reset - Date.now();
+      if (waitTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    }
+
+    const response = await fetch(`${this.baseURL}${endpoint}`);
+    
+    // Update rate limit info from headers
+    this.rateLimit.remaining = parseInt(
+      response.headers.get('X-RateLimit-Remaining') || '0'
+    );
+    this.rateLimit.reset = parseInt(
+      response.headers.get('X-RateLimit-Reset') || '0'
+    ) * 1000;
+
+    if (response.status === 429) {
+      const retryAfter = response.headers.get('Retry-After');
+      throw new Error(`Rate limited. Retry after ${retryAfter}s`);
+    }
+
+    return response.json();
+  }
+}
+
+const client = new TerraQuakeClient();
+const data = await client.request('/earthquakes/recent?limit=10');
+```
+
+```python Python
+import time
+import requests
+
+class TerraQuakeClient:
+    def __init__(self):
+        self.base_url = 'https://api.terraquakeapi.com'
+        self.rate_limit = {'remaining': 100, 'reset': time.time()}
+    
+    def request(self, endpoint):
+        # Wait if rate limit is exhausted
+        if self.rate_limit['remaining'] == 0:
+            wait_time = self.rate_limit['reset'] - time.time()
+            if wait_time > 0:
+                time.sleep(wait_time)
+        
+        response = requests.get(f'{self.base_url}{endpoint}')
+        
+        # Update rate limit info from headers
+        self.rate_limit['remaining'] = int(
+            response.headers.get('X-RateLimit-Remaining', 0)
+        )
+        self.rate_limit['reset'] = int(
+            response.headers.get('X-RateLimit-Reset', 0)
+        )
+        
+        if response.status_code == 429:
+            retry_after = response.headers.get('Retry-After')
+            raise Exception(f'Rate limited. Retry after {retry_after}s')
+        
+        return response.json()
+
+client = TerraQuakeClient()
+data = client.request('/earthquakes/recent?limit=10')
+```
+
+```go Go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "net/http"
+    "strconv"
+    "time"
+)
+
+type TerraQuakeClient struct {
+    baseURL   string
+    remaining int
+    reset     int64
+}
+
+func NewClient() *TerraQuakeClient {
+    return &TerraQuakeClient{
+        baseURL:   "https://api.terraquakeapi.com",
+        remaining: 100,
+        reset:     time.Now().Unix(),
+    }
+}
+
+func (c *TerraQuakeClient) Request(endpoint string) (map[string]interface{}, error) {
+    // Wait if rate limit is exhausted
+    if c.remaining == 0 {
+        waitTime := c.reset - time.Now().Unix()
+        if waitTime > 0 {
+            time.Sleep(time.Duration(waitTime) * time.Second)
+        }
+    }
+
+    resp, err := http.Get(c.baseURL + endpoint)
+    if err != nil {
+        return nil, err
+    }
+    defer resp.Body.Close()
+
+    // Update rate limit info from headers
+    c.remaining, _ = strconv.Atoi(resp.Header.Get("X-RateLimit-Remaining"))
+    c.reset, _ = strconv.ParseInt(resp.Header.Get("X-RateLimit-Reset"), 10, 64)
+
+    if resp.StatusCode == 429 {
+        retryAfter := resp.Header.Get("Retry-After")
+        return nil, fmt.Errorf("rate limited. retry after %ss", retryAfter)
+    }
+
+    var data map[string]interface{}
+    json.NewDecoder(resp.Body).Decode(&data)
+    return data, nil
+}
+```
+
+</CodeGroup>
+
+## Common Questions
+
+<AccordionGroup>
+  <Accordion title="What happens if I exceed the rate limit?">
+    You'll receive a `429 Too Many Requests` response with a `Retry-After` header indicating when you can retry. The request will not be processed.
+  </Accordion>
+
+  <Accordion title="Is the rate limit per API key or per IP?">
+    Rate limits are applied per IP address. All requests from the same IP share the same rate limit.
+  </Accordion>
+
+  <Accordion title="Can I request a higher rate limit?">
+    For production applications requiring higher limits, please contact the TerraQuake team to discuss custom rate limit options.
+  </Accordion>
+
+  <Accordion title="Do rate limits reset immediately after 1 minute?">
+    Yes, the API uses a fixed window approach. Each window is exactly 1 minute, and the counter resets at the start of each new window.
+  </Accordion>
+</AccordionGroup>
+
+## Implementation Details
+
+The rate limiter uses a fixed window algorithm with an in-memory HashMap structure:
+
+```javascript
+// Internal structure: { ip: { count: number, windowStart: number } }
+const buckets = new Map();
+
+// Cleanup expired buckets to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, bucket] of buckets) {
+    if (now - bucket.windowStart > WINDOW_MS) {
+      buckets.delete(ip);
+    }
+  }
+}, WINDOW_MS);
+```
+
+Source: `/home/daytona/workspace/source/backend/src/middleware/rateLimiter.js:12-23`

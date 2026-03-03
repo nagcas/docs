@@ -1,0 +1,477 @@
+---
+title: "GET /stations/statistics"
+description: "Get aggregate statistics and metrics for the INGV seismic station network"
+---
+
+## Endpoint
+
+```
+GET https://api.terraquakeapi.com/stations/statistics
+```
+
+## Description
+
+Provides aggregate metrics and statistics for the entire INGV seismic monitoring network. Returns a summary of total stations, active (open) stations, and inactive (closed) stations. This endpoint is optimized for dashboards, monitoring panels, and network health indicators.
+
+Ideal for getting a quick overview of network scale and operational status without retrieving individual station records.
+
+## Use Cases
+
+- **Dashboard Metrics**: Display network statistics on monitoring dashboards
+- **Health Monitoring**: Track the operational status of the seismic network
+- **Reporting**: Generate summary reports on network coverage
+- **Alerting**: Monitor for unexpected changes in station counts
+- **Analytics**: Analyze network growth and operational trends over time
+
+## Parameters
+
+This endpoint does not accept any query parameters. It always returns the complete network statistics.
+
+## Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.terraquakeapi.com/stations/statistics"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.terraquakeapi.com/stations/statistics'
+);
+const data = await response.json();
+
+if (data.success) {
+  const stats = data.payload.statistics;
+  
+  console.log('INGV Seismic Network Statistics:');
+  console.log(`Total Stations: ${stats.totalStations}`);
+  console.log(`Active (Open): ${stats.stationsOpen}`);
+  console.log(`Inactive (Closed): ${stats.stationsClosed}`);
+  
+  // Calculate percentages
+  const activePercent = (stats.stationsOpen / stats.totalStations * 100).toFixed(1);
+  const inactivePercent = (stats.stationsClosed / stats.totalStations * 100).toFixed(1);
+  
+  console.log(`\nActive: ${activePercent}%`);
+  console.log(`Inactive: ${inactivePercent}%`);
+}
+```
+
+```python Python
+import requests
+
+url = "https://api.terraquakeapi.com/stations/statistics"
+response = requests.get(url)
+data = response.json()
+
+if data.get('success'):
+    stats = data['payload']['statistics']
+    
+    print("INGV Seismic Network Statistics:")
+    print(f"Total Stations: {stats['totalStations']}")
+    print(f"Active (Open): {stats['stationsOpen']}")
+    print(f"Inactive (Closed): {stats['stationsClosed']}")
+    
+    # Calculate operational ratio
+    if stats['totalStations'] > 0:
+        active_ratio = stats['stationsOpen'] / stats['totalStations']
+        print(f"\nOperational Ratio: {active_ratio:.2%}")
+```
+
+```php PHP
+<?php
+$url = "https://api.terraquakeapi.com/stations/statistics";
+$response = file_get_contents($url);
+$data = json_decode($response, true);
+
+if ($data['success']) {
+    $stats = $data['payload']['statistics'];
+    
+    echo "INGV Seismic Network Statistics:\n";
+    echo "Total Stations: " . $stats['totalStations'] . "\n";
+    echo "Active (Open): " . $stats['stationsOpen'] . "\n";
+    echo "Inactive (Closed): " . $stats['stationsClosed'] . "\n";
+    
+    $activePercent = ($stats['stationsOpen'] / $stats['totalStations']) * 100;
+    echo "\nActive: " . number_format($activePercent, 1) . "%\n";
+}
+?>
+```
+
+```go Go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "io"
+    "net/http"
+)
+
+type Response struct {
+    Success bool `json:"success"`
+    Payload struct {
+        Statistics struct {
+            TotalStations   int `json:"totalStations"`
+            StationsOpen    int `json:"stationsOpen"`
+            StationsClosed  int `json:"stationsClosed"`
+        } `json:"statistics"`
+    } `json:"payload"`
+}
+
+func main() {
+    resp, err := http.Get("https://api.terraquakeapi.com/stations/statistics")
+    if err != nil {
+        panic(err)
+    }
+    defer resp.Body.Close()
+    
+    body, _ := io.ReadAll(resp.Body)
+    
+    var data Response
+    json.Unmarshal(body, &data)
+    
+    stats := data.Payload.Statistics
+    fmt.Printf("Total Stations: %d\n", stats.TotalStations)
+    fmt.Printf("Active: %d\n", stats.StationsOpen)
+    fmt.Printf("Inactive: %d\n", stats.StationsClosed)
+}
+```
+
+</CodeGroup>
+
+## Response Format
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="code" type="integer">
+  HTTP status code (200 for success)
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  HTTP status message
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable description ("Statistics stations")
+</ResponseField>
+
+<ResponseField name="payload" type="object">
+  Statistics data object
+  
+  <ResponseField name="type" type="string">
+    Data type identifier ("data")
+  </ResponseField>
+  
+  <ResponseField name="statistics" type="object">
+    Network statistics
+    
+    <ResponseField name="totalStations" type="integer">
+      Total number of stations in the network (active + inactive)
+    </ResponseField>
+    
+    <ResponseField name="stationsOpen" type="integer">
+      Number of currently operational stations (status: "open")
+    </ResponseField>
+    
+    <ResponseField name="stationsClosed" type="integer">
+      Number of inactive stations (status: "closed", "inactive", "deprecated", or "unavailable")
+    </ResponseField>
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Request metadata
+  
+  <ResponseField name="method" type="string">
+    HTTP method used ("GET")
+  </ResponseField>
+  
+  <ResponseField name="path" type="string">
+    Request path
+  </ResponseField>
+  
+  <ResponseField name="timestamp" type="string">
+    ISO 8601 timestamp of the request
+  </ResponseField>
+</ResponseField>
+
+## Response Example
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Statistics stations",
+  "payload": {
+    "type": "data",
+    "statistics": {
+      "totalStations": 450,
+      "stationsOpen": 385,
+      "stationsClosed": 65
+    }
+  },
+  "meta": {
+    "method": "GET",
+    "path": "/stations/statistics",
+    "timestamp": "2025-11-06T12:30:45.120Z"
+  }
+}
+```
+
+## Error Responses
+
+### Service Error
+
+```json
+{
+  "success": false,
+  "code": 500,
+  "status": "Internal Server Error",
+  "message": "Invalid station data format received"
+}
+```
+
+### INGV Service Unavailable
+
+```json
+{
+  "success": false,
+  "code": 500,
+  "status": "Internal Server Error",
+  "message": "HTTP error! status: 503 - INGV service temporarily unavailable"
+}
+```
+
+## Practical Examples
+
+### Dashboard Widget
+
+```javascript
+async function renderStationStats() {
+  const response = await fetch(
+    'https://api.terraquakeapi.com/stations/statistics'
+  );
+  const data = await response.json();
+  
+  if (data.success) {
+    const stats = data.payload.statistics;
+    
+    // Update dashboard elements
+    document.getElementById('total-stations').textContent = stats.totalStations;
+    document.getElementById('active-stations').textContent = stats.stationsOpen;
+    document.getElementById('inactive-stations').textContent = stats.stationsClosed;
+    
+    // Calculate and display percentage
+    const activePercent = (stats.stationsOpen / stats.totalStations * 100).toFixed(1);
+    document.getElementById('active-percent').textContent = `${activePercent}%`;
+    
+    // Set status color based on active percentage
+    const statusEl = document.getElementById('network-status');
+    if (activePercent > 90) {
+      statusEl.className = 'status-good';
+      statusEl.textContent = 'Excellent';
+    } else if (activePercent > 75) {
+      statusEl.className = 'status-ok';
+      statusEl.textContent = 'Good';
+    } else {
+      statusEl.className = 'status-warning';
+      statusEl.textContent = 'Degraded';
+    }
+  }
+}
+
+// Refresh every 5 minutes
+setInterval(renderStationStats, 5 * 60 * 1000);
+renderStationStats();
+```
+
+### Chart Visualization
+
+```javascript
+// Create a pie chart with Chart.js
+const response = await fetch(
+  'https://api.terraquakeapi.com/stations/statistics'
+);
+const data = await response.json();
+
+if (data.success) {
+  const stats = data.payload.statistics;
+  
+  new Chart(document.getElementById('stationChart'), {
+    type: 'pie',
+    data: {
+      labels: ['Active Stations', 'Inactive Stations'],
+      datasets: [{
+        data: [stats.stationsOpen, stats.stationsClosed],
+        backgroundColor: ['#10b981', '#ef4444'],
+        borderWidth: 2,
+        borderColor: '#ffffff'
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: {
+          display: true,
+          text: `INGV Network: ${stats.totalStations} Total Stations`
+        },
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+}
+```
+
+### Health Monitoring Alert
+
+```python
+import requests
+import smtplib
+from email.message import EmailMessage
+
+def check_network_health():
+    url = "https://api.terraquakeapi.com/stations/statistics"
+    response = requests.get(url)
+    data = response.json()
+    
+    if data.get('success'):
+        stats = data['payload']['statistics']
+        total = stats['totalStations']
+        active = stats['stationsOpen']
+        
+        # Calculate active percentage
+        active_percent = (active / total) * 100 if total > 0 else 0
+        
+        # Alert if active percentage drops below threshold
+        if active_percent < 80:
+            send_alert(
+                f"Network Health Alert: Only {active_percent:.1f}% of stations are active",
+                f"Active: {active} / {total} stations\nInactive: {stats['stationsClosed']}"
+            )
+            return False
+        
+        print(f"Network health: {active_percent:.1f}% active")
+        return True
+    
+    return False
+
+def send_alert(subject, body):
+    # Email alert implementation
+    msg = EmailMessage()
+    msg['Subject'] = subject
+    msg['From'] = 'monitor@example.com'
+    msg['To'] = 'admin@example.com'
+    msg.set_content(body)
+    
+    # Send email (configure SMTP server)
+    # smtp.send_message(msg)
+    print(f"Alert: {subject}")
+
+# Run periodically
+check_network_health()
+```
+
+### Compare with Historical Data
+
+```javascript
+// Store statistics over time for trend analysis
+class StationMonitor {
+  constructor() {
+    this.history = [];
+  }
+  
+  async recordStats() {
+    const response = await fetch(
+      'https://api.terraquakeapi.com/stations/statistics'
+    );
+    const data = await response.json();
+    
+    if (data.success) {
+      const stats = data.payload.statistics;
+      this.history.push({
+        timestamp: new Date(),
+        total: stats.totalStations,
+        active: stats.stationsOpen,
+        inactive: stats.stationsClosed
+      });
+      
+      // Keep last 30 days
+      if (this.history.length > 30) {
+        this.history.shift();
+      }
+      
+      this.analyzeTrends();
+    }
+  }
+  
+  analyzeTrends() {
+    if (this.history.length < 2) return;
+    
+    const latest = this.history[this.history.length - 1];
+    const previous = this.history[this.history.length - 2];
+    
+    const activeDiff = latest.active - previous.active;
+    const totalDiff = latest.total - previous.total;
+    
+    if (activeDiff !== 0) {
+      console.log(`Active stations changed: ${activeDiff > 0 ? '+' : ''}${activeDiff}`);
+    }
+    
+    if (totalDiff !== 0) {
+      console.log(`Total stations changed: ${totalDiff > 0 ? '+' : ''}${totalDiff}`);
+    }
+  }
+}
+
+const monitor = new StationMonitor();
+// Record stats daily
+setInterval(() => monitor.recordStats(), 24 * 60 * 60 * 1000);
+```
+
+## Statistics Breakdown
+
+The statistics returned by this endpoint include:
+
+### Total Stations
+The sum of all stations ever registered in the INGV network, including both currently operational and historical stations.
+
+### Stations Open
+Stations with `restrictedStatus: "open"` that are:
+- Currently operational
+- Actively collecting seismic data
+- Transmitting to the INGV network
+- Available for real-time monitoring
+
+### Stations Closed
+Stations with any of the following statuses:
+- `"closed"`: Permanently decommissioned
+- `"inactive"`: Temporarily not operational
+- `"deprecated"`: Replaced or superseded
+- `"unavailable"`: Data currently unavailable
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Active Stations" icon="circle-check" href="/api/stations/status-open">
+    Get full list of operational stations
+  </Card>
+  
+  <Card title="Closed Stations" icon="circle-xmark" href="/api/stations/status-closed">
+    Get full list of inactive stations
+  </Card>
+  
+  <Card title="Get All Stations" icon="list" href="/api/stations/get-all">
+    Browse all stations with details
+  </Card>
+  
+  <Card title="Stations Overview" icon="book" href="/api/stations/overview">
+    Learn more about the Stations API
+  </Card>
+</CardGroup>

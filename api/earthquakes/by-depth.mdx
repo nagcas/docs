@@ -1,0 +1,288 @@
+---
+title: Get Earthquakes by Depth
+description: Retrieve earthquake events filtered by minimum depth threshold
+---
+
+Fetches earthquake events at or deeper than a specified depth threshold. This endpoint is ideal for studying shallow vs deep earthquakes and analyzing crustal vs subduction zone events.
+
+## Endpoint
+
+**Method:** GET  
+**Path:** `/v1/earthquakes/depth`  
+**Authentication:** Not required
+
+## Parameters
+
+<ParamField query="depth" type="number" required>
+  Minimum depth in kilometers. Returns earthquakes with depth >= this value.
+  
+  **Validation:**
+  - Must be a positive number > 0
+  - Returns 400 error if missing: "The depth parameter is required and must be a positive number greater than 0"
+  - Returns 400 error if invalid: "The depth parameter must be a positive number greater than 0"
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number for pagination. Must be a positive integer greater than 0.
+  
+  **Validation:**
+  - Must be > 0
+  - Returns 400 error if invalid
+</ParamField>
+
+<ParamField query="limit" type="integer" default="50">
+  Number of results per page. Must be a positive integer greater than 0.
+  
+  **Validation:**
+  - Must be > 0
+  - Returns 400 error if invalid
+</ParamField>
+
+<ParamField query="sort" type="string" default="-time">
+  Sort order for results. Prefix with `-` for descending order.
+  
+  **Allowed values:**
+  - `time` or `-time` (default: descending)
+  - `magnitude` or `-magnitude`
+  - `depth` or `-depth`
+</ParamField>
+
+<ParamField query="fields" type="string">
+  Comma-separated list of fields to include in response.
+  
+  **Allowed values:**
+  - `time`
+  - `magnitude`
+  - `depth`
+  - `place`
+  - `coordinates`
+</ParamField>
+
+## Request Example
+
+<CodeGroup>
+```bash cURL
+# Shallow earthquakes (≤10km deep)
+curl "https://api.terraquakeapi.com/v1/earthquakes/depth?depth=10"
+
+# Intermediate depth earthquakes (≥70km deep)
+curl "https://api.terraquakeapi.com/v1/earthquakes/depth?depth=70&limit=100"
+
+# Deep earthquakes (≥300km deep)
+curl "https://api.terraquakeapi.com/v1/earthquakes/depth?depth=300"
+```
+
+```javascript JavaScript
+// Get shallow earthquakes (≤10km)
+const response = await fetch(
+  'https://api.terraquakeapi.com/v1/earthquakes/depth?' +
+  new URLSearchParams({
+    depth: 10,
+    limit: 100
+  })
+);
+const data = await response.json();
+
+if (data.success) {
+  console.log(`Total earthquakes at depth ≥10km: ${data.totalEarthquakes}`);
+  console.log(`Message: ${data.message}`);
+  data.payload.forEach(quake => {
+    const { mag, place, time } = quake.properties;
+    const depth = quake.geometry.coordinates[2];
+    console.log(`${mag} - ${place} at ${time} (${depth}km deep)`);
+  });
+}
+```
+
+```python Python
+import requests
+
+# Get shallow earthquakes (≤10km)
+response = requests.get(
+    'https://api.terraquakeapi.com/v1/earthquakes/depth',
+    params={'depth': 10, 'limit': 100}
+)
+data = response.json()
+
+if data.get('success'):
+    print(f"Total earthquakes at depth ≥10km: {data.get('totalEarthquakes')}")
+    print(f"Message: {data.get('message')}")
+    for quake in data.get('payload', []):
+        props = quake['properties']
+        depth = quake['geometry']['coordinates'][2]
+        print(f"{props['mag']} - {props['place']} at {props['time']} ({depth}km deep)")
+```
+</CodeGroup>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="code" type="integer">
+  HTTP status code (200 for success)
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  HTTP status message ("OK" for success)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable message. Format: "Earthquake events with depth > {depthValue} km"
+</ResponseField>
+
+<ResponseField name="payload" type="array">
+  Array of GeoJSON Feature objects. Depth is stored in `geometry.coordinates[2]` (third element of coordinates array)
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Request metadata containing method, path, and timestamp
+</ResponseField>
+
+<ResponseField name="totalEarthquakes" type="integer">
+  Total count of earthquakes at or deeper than specified depth
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination details with page, totalPages, limit, and hasMore
+</ResponseField>
+
+## Response Example
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Earthquake events with depth > 10 km",
+  "payload": [
+    {
+      "type": "Feature",
+      "properties": {
+        "eventId": 44278572,
+        "originId": 140102761,
+        "time": "2025-09-26T19:33:46.440000",
+        "author": "SURVEY-INGV",
+        "magType": "ML",
+        "mag": 1,
+        "magAuthor": "--",
+        "type": "earthquake",
+        "place": "Costa Calabra sud-orientale (Reggio di Calabria)",
+        "version": 100,
+        "geojson_creationTime": "2025-11-06T00:52:30"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [16.2387, 37.9982, 10.5]
+      }
+    }
+  ],
+  "meta": {
+    "method": "GET",
+    "path": "/v1/earthquakes/depth?depth=10&limit=100",
+    "timestamp": "2025-11-06T01:00:00.000Z"
+  },
+  "totalEarthquakes": 3421,
+  "pagination": {
+    "page": 1,
+    "totalPages": 35,
+    "limit": 100,
+    "hasMore": true
+  }
+}
+```
+
+## Error Responses
+
+### Missing Depth Parameter
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The depth parameter is required and must be a positive number greater than 0"
+}
+```
+
+### Invalid Depth Value
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The depth parameter must be a positive number greater than 0"
+}
+```
+
+### Invalid Limit Parameter
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The limit parameter must be a positive integer greater than 0. Example: ?limit=50"
+}
+```
+
+## Implementation Details
+
+- **Filter Logic:** `feature.geometry.coordinates[2] >= depthValue`
+- **Depth Location:** Third element of GeoJSON coordinates array (index 2)
+- **Date Range:** From start of current year to today
+- **Filtering:** Applied after fetching all events from INGV (client-side filtering)
+- **Sorting:** Default sort is by time (most recent first: `-time`)
+- **Pagination:** Manual pagination applied after depth filtering
+- **Coordinate Format:** [longitude, latitude, depth in km]
+
+## Earthquake Depth Classification
+
+<CardGroup cols={3}>
+  <Card title="Shallow" icon="layer-group">
+    **0-70 km**
+    
+    Most common type. Occur in Earth's crust. Can cause significant damage due to proximity to surface.
+  </Card>
+  
+  <Card title="Intermediate" icon="layer-group">
+    **70-300 km**
+    
+    Occur in subduction zones. Less common but can still be felt at surface.
+  </Card>
+  
+  <Card title="Deep" icon="layer-group">
+    **300-700 km**
+    
+    Occur in subduction zones. Rare and typically less damaging at surface.
+  </Card>
+</CardGroup>
+
+## Use Cases
+
+- Studying crustal vs subduction zone earthquakes
+- Analyzing tectonic plate interactions
+- Research on earthquake mechanisms
+- Identifying shallow earthquakes with higher damage potential
+- Seismological studies on Earth's interior structure
+
+## Example Queries
+
+```bash
+# Very shallow earthquakes (crustal)
+curl "https://api.terraquakeapi.com/v1/earthquakes/depth?depth=5"
+
+# Shallow to intermediate boundary
+curl "https://api.terraquakeapi.com/v1/earthquakes/depth?depth=70"
+
+# Deep earthquakes only
+curl "https://api.terraquakeapi.com/v1/earthquakes/depth?depth=300"
+```
+
+## Related Endpoints
+
+- [By Magnitude](/api/earthquakes/by-magnitude) - Filter by magnitude
+- [By Date Range](/api/earthquakes/by-date-range) - Custom date range with depth filter
+- [Recent Earthquakes](/api/earthquakes/recent) - Year-to-date events

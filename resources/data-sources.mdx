@@ -1,0 +1,149 @@
+---
+title: 'Data Sources'
+description: 'Understanding TerraQuake API data sources, coverage, and reliability'
+icon: 'database'
+---
+
+## Primary Data Source
+
+TerraQuake API uses **INGV (Istituto Nazionale di Geofisica e Vulcanologia)** as its primary source for seismic data. INGV is Italy's authoritative institution for geophysics and volcanology research, providing real-time earthquake monitoring and analysis.
+
+<Card title="INGV" icon="wave" href="http://terremoti.ingv.it/">
+  Official earthquake monitoring service from Italy's National Institute of Geophysics and Volcanology
+</Card>
+
+## Data Format
+
+All earthquake data is provided in **GeoJSON format**, which is a widely-used standard for encoding geographic data structures.
+
+```json Example GeoJSON Structure
+{
+  "type": "Feature",
+  "properties": {
+    "eventId": 44278572,
+    "originId": 140102761,
+    "time": "2025-09-26T19:33:46.440000",
+    "author": "SURVEY-INGV",
+    "magType": "ML",
+    "mag": 1.0,
+    "type": "earthquake",
+    "place": "Costa Calabra sud-orientale (Reggio di Calabria)",
+    "version": 100
+  },
+  "geometry": {
+    "type": "Point",
+    "coordinates": [16.2387, 37.9982, 10.5]
+  }
+}
+```
+
+The `coordinates` array follows the format: `[longitude, latitude, depth_in_km]`.
+
+## Data Coverage
+
+### Geographic Coverage
+
+While TerraQuake API primarily focuses on **Italian seismic events**, the INGV data source includes:
+
+- **Primary**: All Italian regions and territories
+- **Extended**: Mediterranean region
+- **Additional**: Significant global seismic events detected by INGV sensors
+
+### Temporal Coverage
+
+The API provides access to:
+
+- **Real-time data**: Current year earthquakes updated continuously
+- **Historical data**: Access to past seismic events through date range queries
+- **Today's events**: Dedicated endpoint for same-day earthquakes
+- **Recent events**: Last 7 days, monthly, and custom time ranges
+
+## Update Frequency
+
+TerraQuake API fetches data from INGV in real-time:
+
+- **Automated updates**: Continuous synchronization with INGV sources
+- **No caching delays**: Data is fetched directly from INGV for each request
+- **Event revisions**: INGV may update event details (magnitude, location) as analysis improves
+
+<Note>
+  INGV events include a `version` number that increments when event data is refined or updated.
+</Note>
+
+## Data Accuracy and Reliability
+
+### Quality Assurance
+
+- **Authoritative Source**: INGV is the official Italian government institution for seismic monitoring
+- **Professional Network**: Data comes from a network of professional seismic stations across Italy
+- **Peer-Reviewed**: INGV follows international seismological standards and protocols
+- **Event Verification**: All events are verified and classified by expert seismologists
+
+### Magnitude Types
+
+INGV reports various magnitude types:
+
+- **ML** (Local Magnitude): Most common for regional events
+- **Mw** (Moment Magnitude): Used for larger earthquakes
+- **Md** (Duration Magnitude): Alternative calculation method
+
+### Location Precision
+
+Coordinates are provided with decimal precision:
+- **Latitude/Longitude**: Typically precise to 4 decimal places (~11 meters)
+- **Depth**: Reported in kilometers below sea level
+
+## Station Network Data
+
+In addition to earthquake events, TerraQuake API provides access to INGV's seismic monitoring station network:
+
+- **Station locations**: GeoJSON formatted station positions
+- **Operational status**: Active and inactive stations
+- **Network information**: INGV network (IV) station details
+- **Station metadata**: Equipment information and operating periods
+
+<Card title="INGV FDSN Station Service" icon="tower-broadcast" href="http://webservices.ingv.it/fdsnws/station/1/">
+  Access detailed technical documentation for INGV's station web services
+</Card>
+
+## Additional Resources
+
+<CardGroup cols={2}>
+  <Card title="INGV Earthquake Portal" icon="earth-europe" href="http://terremoti.ingv.it/">
+    View real-time earthquakes on INGV's official portal
+  </Card>
+  
+  <Card title="INGV Web Services" icon="code" href="http://webservices.ingv.it/">
+    Technical documentation for INGV's web services
+  </Card>
+  
+  <Card title="FDSN Standards" icon="file-contract" href="https://www.fdsn.org/webservices/">
+    International standards for seismological data services
+  </Card>
+  
+  <Card title="GeoJSON Specification" icon="map" href="https://geojson.org/">
+    Learn more about the GeoJSON data format
+  </Card>
+</CardGroup>
+
+## Data Limitations
+
+<Warning>
+  While TerraQuake API strives to provide accurate real-time data, please note:
+  
+  - Data is dependent on INGV's availability and service status
+  - Very recent events (within minutes) may not yet be available
+  - Event parameters may be revised as INGV refines their analysis
+  - The API is intended for informational and research purposes, not emergency response
+</Warning>
+
+## Attribution
+
+When using data from TerraQuake API, please acknowledge the data source:
+
+```
+Data provided by INGV (Istituto Nazionale di Geofisica e Vulcanologia)
+via TerraQuake API
+```
+
+For academic publications, please cite both INGV and TerraQuake API appropriately.

@@ -1,0 +1,289 @@
+---
+title: Get Earthquakes by Region
+description: Retrieve earthquake events within Italian administrative regions
+---
+
+Fetches earthquake events within a specific Italian administrative region using predefined bounding boxes. This endpoint is ideal for regional monitoring and analysis of Italian seismic zones.
+
+## Endpoint
+
+**Method:** GET  
+**Path:** `/v1/earthquakes/region`  
+**Authentication:** Not required
+
+## Parameters
+
+<ParamField query="region" type="string" required>
+  Italian region name (case-insensitive).
+  
+  **Validation:**
+  - Must be a non-empty string
+  - Must match a supported Italian region (see list below)
+  - Returns 400 error if missing: "The 'region' parameter is required and must be a valid string. Example: ?region=Calabria"
+  - Returns 400 error if unsupported: "Region '{region}' is not supported. Please provide a valid Italian region."
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number for pagination. Must be a positive integer greater than 0.
+  
+  **Validation:**
+  - Must be > 0
+  - Returns 400 error if invalid
+</ParamField>
+
+<ParamField query="limit" type="integer" default="50">
+  Number of results per page. Must be a positive integer greater than 0.
+  
+  **Validation:**
+  - Must be > 0
+  - Returns 400 error if invalid
+</ParamField>
+
+<ParamField query="sort" type="string" default="-time">
+  Sort order for results. Prefix with `-` for descending order.
+  
+  **Allowed values:**
+  - `time` or `-time` (default: descending)
+  - `magnitude` or `-magnitude`
+  - `depth` or `-depth`
+</ParamField>
+
+<ParamField query="fields" type="string">
+  Comma-separated list of fields to include in response.
+  
+  **Allowed values:**
+  - `time`
+  - `magnitude`
+  - `depth`
+  - `place`
+  - `coordinates`
+</ParamField>
+
+## Supported Italian Regions
+
+The following regions are supported (case-insensitive):
+
+<AccordionGroup>
+  <Accordion title="All 20 Italian Regions">
+    - Abruzzo
+    - Basilicata
+    - Calabria
+    - Campania
+    - Emilia-Romagna
+    - Friuli-Venezia Giulia
+    - Lazio
+    - Liguria
+    - Lombardia
+    - Marche
+    - Molise
+    - Piemonte
+    - Puglia
+    - Sardegna
+    - Sicilia
+    - Toscana
+    - Trentino-Alto Adige
+    - Umbria
+    - Valle d'Aosta
+    - Veneto
+  </Accordion>
+</AccordionGroup>
+
+## Request Example
+
+<CodeGroup>
+```bash cURL
+# Earthquakes in Calabria
+curl "https://api.terraquakeapi.com/v1/earthquakes/region?region=Calabria"
+
+# Earthquakes in Sicily
+curl "https://api.terraquakeapi.com/v1/earthquakes/region?region=Sicilia&limit=100"
+
+# Case-insensitive region name
+curl "https://api.terraquakeapi.com/v1/earthquakes/region?region=calabria"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.terraquakeapi.com/v1/earthquakes/region?' +
+  new URLSearchParams({
+    region: 'Calabria',
+    limit: 100
+  })
+);
+const data = await response.json();
+
+if (data.success) {
+  console.log(`Earthquakes in Calabria: ${data.totalEarthquakes}`);
+  console.log(`Date range: ${data.message}`);
+  data.payload.forEach(quake => {
+    const { mag, place, time } = quake.properties;
+    console.log(`${mag} - ${place} at ${time}`);
+  });
+}
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.terraquakeapi.com/v1/earthquakes/region',
+    params={'region': 'Calabria', 'limit': 100}
+)
+data = response.json()
+
+if data.get('success'):
+    print(f"Earthquakes in Calabria: {data.get('totalEarthquakes')}")
+    print(f"Date range: {data.get('message')}")
+    for quake in data.get('payload', []):
+        props = quake['properties']
+        print(f"{props['mag']} - {props['place']} at {props['time']}")
+```
+</CodeGroup>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="code" type="integer">
+  HTTP status code (200 for success)
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  HTTP status message ("OK" for success)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable message. Format: "Earthquake events detected in the region '{region}' from {startDate} to {endDate}"
+</ResponseField>
+
+<ResponseField name="payload" type="array">
+  Array of GeoJSON Feature objects containing earthquake data
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Request metadata containing method, path, and timestamp
+</ResponseField>
+
+<ResponseField name="totalEarthquakes" type="integer">
+  Total count of earthquakes in the specified region
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination details with page, totalPages, limit, and hasMore
+</ResponseField>
+
+## Response Example
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Earthquake events detected in the region 'Calabria' from 2025-01-01 to 2025-11-06",
+  "payload": [
+    {
+      "type": "Feature",
+      "properties": {
+        "eventId": 44278572,
+        "originId": 140102761,
+        "time": "2025-09-26T19:33:46.440000",
+        "author": "SURVEY-INGV",
+        "magType": "ML",
+        "mag": 1,
+        "magAuthor": "--",
+        "type": "earthquake",
+        "place": "Costa Calabra sud-orientale (Reggio di Calabria)",
+        "version": 100,
+        "geojson_creationTime": "2025-11-06T00:52:30"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [16.2387, 37.9982, 10.5]
+      }
+    }
+  ],
+  "meta": {
+    "method": "GET",
+    "path": "/v1/earthquakes/region?region=Calabria",
+    "timestamp": "2025-11-06T01:00:00.000Z"
+  },
+  "totalEarthquakes": 1456,
+  "pagination": {
+    "page": 1,
+    "totalPages": 30,
+    "limit": 50,
+    "hasMore": true
+  }
+}
+```
+
+## Error Responses
+
+### Missing Region Parameter
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The 'region' parameter is required and must be a valid string. Example: ?region=Calabria"
+}
+```
+
+### Unsupported Region
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "Region 'InvalidRegion' is not supported. Please provide a valid Italian region."
+}
+```
+
+### Invalid Pagination
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The 'limit' parameter must be a positive integer greater than 0. Example: ?limit=50"
+}
+```
+
+## Implementation Details
+
+- **Region Matching:** Region names are normalized to lowercase and trimmed before matching
+- **Bounding Boxes:** Each region has predefined bounding box coordinates (minlatitude, maxlatitude, minlongitude, maxlongitude)
+- **Bounding Box Source:** Loaded from `regionBoundingBoxes` configuration
+- **Date Range:** From start of current year to today
+- **INGV Query:** Uses geographic bounds: `minlatitude`, `maxlatitude`, `minlongitude`, `maxlongitude`
+- **Sorting:** Default sort is by time (most recent first: `-time`)
+- **Pagination:** Manual pagination applied after fetching all events from INGV
+
+## Use Cases
+
+- Regional seismic activity monitoring
+- Italian civil protection and emergency services
+- Regional risk assessment and planning
+- Comparative analysis between regions
+- Local government reporting
+
+## Regional Seismic Activity
+
+Some of the most seismically active Italian regions:
+
+- **Calabria** - High seismic activity due to tectonic plate boundaries
+- **Sicilia** - Active due to Mt. Etna and tectonic activity
+- **Abruzzo** - Known for significant historical earthquakes
+- **Marche** - Central Apennines seismic zone
+- **Friuli-Venezia Giulia** - Alpine seismic zone
+
+## Related Endpoints
+
+- [By Location](/api/earthquakes/by-location) - Search by coordinates and radius
+- [Recent Earthquakes](/api/earthquakes/recent) - Year-to-date events
+- [By Date Range](/api/earthquakes/by-date-range) - Custom date range

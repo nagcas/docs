@@ -1,0 +1,120 @@
+{
+  "projectType": "api-service",
+  "projectName": "TerraQuake API",
+  "projectDescription": "A developer-friendly REST API for exploring and analyzing seismic events across Italy and beyond",
+  "theme": "aspen",
+  "primaryColor": "#D97706",
+  "lightColor": "#FCD34D",
+  "darkColor": "#92400E",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/rate-limiting",
+              "concepts/pagination",
+              "concepts/error-handling",
+              "concepts/response-format"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/filtering-earthquakes",
+              "guides/location-queries",
+              "guides/working-with-stations",
+              "guides/best-practices"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Earthquakes",
+            "pages": [
+              "api/earthquakes/overview",
+              "api/earthquakes/recent",
+              "api/earthquakes/today",
+              "api/earthquakes/last-week",
+              "api/earthquakes/by-month",
+              "api/earthquakes/by-date-range",
+              "api/earthquakes/by-location",
+              "api/earthquakes/by-region",
+              "api/earthquakes/by-depth",
+              "api/earthquakes/by-magnitude",
+              "api/earthquakes/by-event-id"
+            ]
+          },
+          {
+            "group": "Stations",
+            "pages": [
+              "api/stations/overview",
+              "api/stations/get-all",
+              "api/stations/by-code",
+              "api/stations/geojson",
+              "api/stations/status-open",
+              "api/stations/status-closed",
+              "api/stations/statistics"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Resources",
+        "groups": [
+          {
+            "group": "Resources",
+            "pages": [
+              "resources/data-sources",
+              "resources/sdks-libraries",
+              "resources/changelog",
+              "resources/contributing"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Real-time earthquake data from INGV",
+    "Comprehensive filtering by time, location, magnitude, and depth",
+    "Seismic station monitoring network",
+    "Geographic queries with radius-based search",
+    "Italian region-specific data",
+    "Rate limiting (100 req/min)",
+    "GeoJSON format support",
+    "RESTful API design",
+    "Detailed pagination support"
+  ],
+  "publicApiSurface": [
+    "GET /v1/earthquakes/recent",
+    "GET /v1/earthquakes/today",
+    "GET /v1/earthquakes/last-week",
+    "GET /v1/earthquakes/month",
+    "GET /v1/earthquakes/range-time",
+    "GET /v1/earthquakes/location",
+    "GET /v1/earthquakes/region",
+    "GET /v1/earthquakes/depth",
+    "GET /v1/earthquakes/magnitude",
+    "GET /v1/earthquakes/eventId",
+    "GET /v1/stations",
+    "GET /v1/stations/code",
+    "GET /v1/stations/geojson",
+    "GET /v1/stations/status/open",
+    "GET /v1/stations/status/closed",
+    "GET /v1/stations/statistics"
+  ]
+}

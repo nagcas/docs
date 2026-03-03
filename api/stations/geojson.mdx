@@ -1,0 +1,400 @@
+---
+title: "GET /stations/geojson"
+description: "Get seismic stations in GeoJSON format for mapping and visualization"
+---
+
+## Endpoint
+
+```
+GET https://api.terraquakeapi.com/stations/geojson
+```
+
+## Description
+
+Returns the complete list of INGV seismic monitoring stations formatted as GeoJSON FeatureCollection. This endpoint is optimized for mapping applications, GIS integration, and spatial visualization libraries like Mapbox, Leaflet, and Google Maps.
+
+Each station is represented as a GeoJSON Point Feature with 3D coordinates (longitude, latitude, elevation) and essential metadata in the properties object.
+
+## Use Cases
+
+- **Interactive Maps**: Display stations on web maps (Mapbox, Leaflet, Google Maps)
+- **GIS Analysis**: Import into QGIS, ArcGIS, or other GIS software
+- **Spatial Queries**: Perform geometric operations and spatial filtering
+- **Data Visualization**: Create heatmaps, cluster maps, and coverage visualizations
+- **Mobile Apps**: Integrate with mobile mapping SDKs
+
+## Parameters
+
+<ParamField query="limit" type="integer" default="50">
+  Number of station features to return per page. Must be a positive integer greater than 0.
+  
+  **Maximum**: 1000
+  
+  **Example**: `?limit=100`
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number for pagination. Must be a positive integer greater than 0.
+  
+  **Example**: `?page=2`
+</ParamField>
+
+## Request Examples
+
+<CodeGroup>
+
+```bash cURL
+curl "https://api.terraquakeapi.com/stations/geojson?limit=100&page=1"
+```
+
+```javascript Mapbox GL JS
+// Load stations into Mapbox
+const response = await fetch(
+  'https://api.terraquakeapi.com/stations/geojson?limit=500'
+);
+const data = await response.json();
+
+// Create GeoJSON FeatureCollection from paginated results
+const geojson = {
+  type: 'FeatureCollection',
+  features: data.payload
+};
+
+// Add source to map
+map.addSource('seismic-stations', {
+  type: 'geojson',
+  data: geojson
+});
+
+// Add circle layer
+map.addLayer({
+  id: 'stations-circle',
+  type: 'circle',
+  source: 'seismic-stations',
+  paint: {
+    'circle-radius': 6,
+    'circle-color': [
+      'match',
+      ['get', 'status'],
+      'open', '#10b981',
+      'closed', '#ef4444',
+      '#6b7280'
+    ],
+    'circle-stroke-width': 2,
+    'circle-stroke-color': '#ffffff'
+  }
+});
+
+// Add labels
+map.addLayer({
+  id: 'stations-label',
+  type: 'symbol',
+  source: 'seismic-stations',
+  layout: {
+    'text-field': ['get', 'code'],
+    'text-size': 12,
+    'text-offset': [0, 1.5]
+  }
+});
+```
+
+```javascript Leaflet
+// Load stations into Leaflet
+const response = await fetch(
+  'https://api.terraquakeapi.com/stations/geojson?limit=500'
+);
+const data = await response.json();
+
+// Create GeoJSON layer
+const stationsLayer = L.geoJSON(data.payload, {
+  pointToLayer: function (feature, latlng) {
+    const isOpen = feature.properties.status === 'open';
+    return L.circleMarker(latlng, {
+      radius: 6,
+      fillColor: isOpen ? '#10b981' : '#ef4444',
+      color: '#fff',
+      weight: 2,
+      opacity: 1,
+      fillOpacity: 0.8
+    });
+  },
+  onEachFeature: function (feature, layer) {
+    const props = feature.properties;
+    layer.bindPopup(`
+      <strong>${props.code}</strong><br>
+      ${props.site}<br>
+      Status: ${props.status}<br>
+      Elevation: ${feature.geometry.coordinates[2]}m
+    `);
+  }
+}).addTo(map);
+```
+
+```python Python with GeoPandas
+import requests
+import geopandas as gpd
+from shapely.geometry import Point
+
+# Fetch GeoJSON data
+url = "https://api.terraquakeapi.com/stations/geojson?limit=500"
+response = requests.get(url)
+data = response.json()
+
+if data.get('success'):
+    # Convert to GeoDataFrame
+    features = data['payload']
+    gdf = gpd.GeoDataFrame.from_features(features)
+    
+    # Now you can perform spatial operations
+    print(f"Total stations: {len(gdf)}")
+    print(f"\nStations by status:")
+    print(gdf['status'].value_counts())
+    
+    # Filter open stations
+    open_stations = gdf[gdf['status'] == 'open']
+    print(f"\nOpen stations: {len(open_stations)}")
+    
+    # Save to GeoJSON file
+    gdf.to_file("ingv_stations.geojson", driver="GeoJSON")
+```
+
+</CodeGroup>
+
+## Response Format
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="code" type="integer">
+  HTTP status code (200 for success)
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  HTTP status message
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable description ("Stations format geojson")
+</ResponseField>
+
+<ResponseField name="payload" type="array">
+  Array of GeoJSON Feature objects (see GeoJSON Feature structure below)
+</ResponseField>
+
+<ResponseField name="totalStations" type="integer">
+  Total number of station features available
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination metadata
+  
+  <ResponseField name="page" type="integer">
+    Current page number
+  </ResponseField>
+  
+  <ResponseField name="totalPages" type="integer">
+    Total number of pages
+  </ResponseField>
+  
+  <ResponseField name="limit" type="integer">
+    Features per page
+  </ResponseField>
+  
+  <ResponseField name="hasMore" type="boolean">
+    Whether more pages are available
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Request metadata (method, path, timestamp)
+</ResponseField>
+
+## GeoJSON Feature Structure
+
+Each feature in the `payload` array follows the GeoJSON specification:
+
+<ResponseField name="type" type="string">
+  Always "Feature" for GeoJSON features
+</ResponseField>
+
+<ResponseField name="geometry" type="object">
+  GeoJSON Point geometry
+  
+  <ResponseField name="type" type="string">
+    Always "Point"
+  </ResponseField>
+  
+  <ResponseField name="coordinates" type="array">
+    3D coordinate array: [longitude, latitude, elevation]
+    
+    - **[0]** (longitude): East-west position in decimal degrees (-180 to 180)
+    - **[1]** (latitude): North-south position in decimal degrees (-90 to 90)
+    - **[2]** (elevation): Height above sea level in meters
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="properties" type="object">
+  Station metadata
+  
+  <ResponseField name="code" type="string">
+    Unique station code (e.g., "ACATE")
+  </ResponseField>
+  
+  <ResponseField name="name" type="string">
+    Full station name including network prefix
+  </ResponseField>
+  
+  <ResponseField name="site" type="string">
+    Human-readable site location name
+  </ResponseField>
+  
+  <ResponseField name="status" type="string">
+    Operational status: "open", "closed", "inactive", "deprecated", "unavailable", or "unknow" (sic)
+  </ResponseField>
+</ResponseField>
+
+## Response Example
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Stations format geojson",
+  "payload": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [14.4983, 37.0287, 206.0]
+      },
+      "properties": {
+        "code": "ACATE",
+        "name": "IV.ACATE",
+        "site": "Acate (RG)",
+        "status": "open"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [15.9428, 40.7328, 652.0]
+      },
+      "properties": {
+        "code": "ACER",
+        "name": "IV.ACER",
+        "site": "Acerenza (PZ)",
+        "status": "open"
+      }
+    }
+  ],
+  "meta": {
+    "method": "GET",
+    "path": "/stations/geojson?limit=2&page=1",
+    "timestamp": "2025-11-06T11:15:30.420Z"
+  },
+  "totalStations": 450,
+  "pagination": {
+    "page": 1,
+    "totalPages": 225,
+    "limit": 2,
+    "hasMore": true
+  }
+}
+```
+
+## Error Responses
+
+### Invalid Limit Parameter
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The 'limit' parameter must be a positive integer greater than 0. Example: ?limit=50"
+}
+```
+
+### Invalid Page Parameter
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The 'page' parameter must be a positive integer greater than 0. Example: ?page=2"
+}
+```
+
+## Complete FeatureCollection Example
+
+To use with most mapping libraries, wrap the payload in a FeatureCollection:
+
+```javascript
+const response = await fetch(
+  'https://api.terraquakeapi.com/stations/geojson?limit=500'
+);
+const data = await response.json();
+
+// Create standard GeoJSON FeatureCollection
+const featureCollection = {
+  type: 'FeatureCollection',
+  features: data.payload
+};
+
+// Now compatible with any GeoJSON library
+map.addSource('stations', {
+  type: 'geojson',
+  data: featureCollection
+});
+```
+
+## Filtering by Status
+
+Filter stations by operational status after fetching:
+
+```javascript
+const response = await fetch(
+  'https://api.terraquakeapi.com/stations/geojson?limit=500'
+);
+const data = await response.json();
+
+// Filter for open stations only
+const openStations = {
+  type: 'FeatureCollection',
+  features: data.payload.filter(f => f.properties.status === 'open')
+};
+
+console.log(`Open stations: ${openStations.features.length}`);
+```
+
+## Coordinate Reference System
+
+All coordinates use the **WGS84 datum (EPSG:4326)**:
+- Longitude/Latitude in decimal degrees
+- Elevation in meters above mean sea level
+
+This is the standard coordinate system for web mapping and GPS.
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Get All Stations" icon="list" href="/api/stations/get-all">
+    Get full station details (non-GeoJSON)
+  </Card>
+  
+  <Card title="Active Stations" icon="circle-check" href="/api/stations/status-open">
+    Filter for operational stations
+  </Card>
+  
+  <Card title="Closed Stations" icon="circle-xmark" href="/api/stations/status-closed">
+    Get inactive station locations
+  </Card>
+  
+  <Card title="Statistics" icon="chart-simple" href="/api/stations/statistics">
+    View network metrics
+  </Card>
+</CardGroup>

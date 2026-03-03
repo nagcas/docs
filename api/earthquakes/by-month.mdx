@@ -1,0 +1,253 @@
+---
+title: Get Earthquakes by Month
+description: Retrieve all earthquake events for a specific month and year
+---
+
+Fetches all earthquake events that occurred during a specific month and year. This endpoint is ideal for historical analysis and monthly reports.
+
+## Endpoint
+
+**Method:** GET  
+**Path:** `/v1/earthquakes/month`  
+**Authentication:** Not required
+
+## Parameters
+
+<ParamField query="year" type="integer" required>
+  Four-digit year (YYYY format).
+  
+  **Validation:**
+  - Must be a valid number
+  - Must be between 1900 and current year + 1
+  - Returns 400 error if missing or invalid: "Both 'year' and 'month' parameters are required and must be numbers. Example: ?year=2025&month=03"
+</ParamField>
+
+<ParamField query="month" type="integer" required>
+  Month number from 1 to 12 (1 = January, 12 = December).
+  
+  **Validation:**
+  - Must be a valid number
+  - Must be between 1 and 12
+  - Returns 400 error if invalid: "The 'month' parameter must be between 1 and 12. Example: ?month=07 for July"
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number for pagination. Must be a positive integer greater than 0.
+  
+  **Validation:**
+  - Must be > 0
+  - Returns 400 error if invalid
+</ParamField>
+
+<ParamField query="limit" type="integer" default="50">
+  Number of results per page. Must be a positive integer greater than 0.
+  
+  **Validation:**
+  - Must be > 0
+  - Returns 400 error if invalid
+</ParamField>
+
+<ParamField query="sort" type="string" default="-time">
+  Sort order for results. Prefix with `-` for descending order.
+  
+  **Allowed values:**
+  - `time` or `-time` (default: descending)
+  - `magnitude` or `-magnitude`
+  - `depth` or `-depth`
+</ParamField>
+
+<ParamField query="fields" type="string">
+  Comma-separated list of fields to include in response.
+  
+  **Allowed values:**
+  - `time`
+  - `magnitude`
+  - `depth`
+  - `place`
+  - `coordinates`
+</ParamField>
+
+## Request Example
+
+<CodeGroup>
+```bash cURL
+curl "https://api.terraquakeapi.com/v1/earthquakes/month?year=2025&month=9&page=1&limit=50"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.terraquakeapi.com/v1/earthquakes/month?year=2025&month=9&limit=50'
+);
+const data = await response.json();
+
+if (data.success) {
+  console.log(`Earthquakes in September 2025: ${data.totalEarthquakes}`);
+  data.payload.forEach(quake => {
+    const { mag, place, time } = quake.properties;
+    console.log(`${mag} - ${place} at ${time}`);
+  });
+}
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.terraquakeapi.com/v1/earthquakes/month',
+    params={'year': 2025, 'month': 9, 'limit': 50}
+)
+data = response.json()
+
+if data.get('success'):
+    print(f"Earthquakes in September 2025: {data.get('totalEarthquakes')}")
+    for quake in data.get('payload', []):
+        props = quake['properties']
+        print(f"{props['mag']} - {props['place']} at {props['time']}")
+```
+</CodeGroup>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="code" type="integer">
+  HTTP status code (200 for success)
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  HTTP status message ("OK" for success)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable message. Format: "Earthquake events for {year}-{month}"
+</ResponseField>
+
+<ResponseField name="payload" type="array">
+  Array of GeoJSON Feature objects containing earthquake data
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Request metadata containing method, path, and timestamp
+</ResponseField>
+
+<ResponseField name="totalEarthquakes" type="integer">
+  Total count of earthquakes in the specified month
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination details with page, totalPages, limit, and hasMore
+</ResponseField>
+
+## Response Example
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Earthquake events for 2025-09",
+  "payload": [
+    {
+      "type": "Feature",
+      "properties": {
+        "eventId": 44278572,
+        "originId": 140102761,
+        "time": "2025-09-26T19:33:46.440000",
+        "author": "SURVEY-INGV",
+        "magType": "ML",
+        "mag": 1,
+        "magAuthor": "--",
+        "type": "earthquake",
+        "place": "Costa Calabra sud-orientale (Reggio di Calabria)",
+        "version": 100,
+        "geojson_creationTime": "2025-11-06T00:52:30"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [16.2387, 37.9982, 10.5]
+      }
+    }
+  ],
+  "meta": {
+    "method": "GET",
+    "path": "/v1/earthquakes/month?year=2025&month=9&limit=50",
+    "timestamp": "2025-11-06T01:00:00.000Z"
+  },
+  "totalEarthquakes": 1284,
+  "pagination": {
+    "page": 1,
+    "totalPages": 26,
+    "limit": 50,
+    "hasMore": true
+  }
+}
+```
+
+## Error Responses
+
+### Missing Required Parameters
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "Both 'year' and 'month' parameters are required and must be numbers. Example: ?year=2025&month=03"
+}
+```
+
+### Invalid Month
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The 'month' parameter must be between 1 and 12. Example: ?month=07 for July"
+}
+```
+
+### Invalid Year
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The 'year' parameter must be between 1900 and 2026"
+}
+```
+
+### Invalid Pagination
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The 'page' parameter must be a positive integer greater than 0. Example: ?page=2"
+}
+```
+
+## Implementation Details
+
+- **Date Range Calculation:** Start date is first day of month (`{year}-{month}-01`), end date is first day of next month
+- **Month Padding:** Month is zero-padded to 2 digits (e.g., March = "03")
+- **Sorting:** Default sort is by time (most recent first: `-time`)
+- **Pagination:** Manual pagination applied after fetching all events from INGV
+- **Data Source:** INGV API with `orderby=time` and `format=geojson`
+
+## Use Cases
+
+- Monthly seismic activity reports
+- Historical analysis and comparisons
+- Year-over-year trend analysis
+- Research and academic studies
+
+## Related Endpoints
+
+- [Recent Earthquakes](/api/earthquakes/recent) - Year-to-date events
+- [By Date Range](/api/earthquakes/by-date-range) - Custom date range
+- [Last Week](/api/earthquakes/last-week) - Last 7 days

@@ -1,0 +1,435 @@
+---
+title: 'Filtering Earthquakes'
+description: 'Learn how to filter earthquake data using various methods including time, magnitude, depth, and region'
+---
+
+## Overview
+
+The TerraQuake API provides multiple filtering methods to help you find exactly the earthquake data you need. This guide covers all available filtering options and when to use each one.
+
+## Filter Types
+
+### Time-based Filters
+
+Time filters are the most common way to query earthquake data.
+
+<Tabs>
+  <Tab title="Today's Events">
+    Returns all earthquakes that occurred today.
+
+    ```bash cURL
+    curl https://api.terraquakeapi.com/api/v1/earthquakes/today
+    ```
+
+    ```python Python
+    import requests
+
+    response = requests.get('https://api.terraquakeapi.com/api/v1/earthquakes/today')
+    earthquakes = response.json()
+    print(f"Found {earthquakes['totalEarthquakes']} events today")
+    ```
+
+    ```javascript JavaScript
+    const response = await fetch('https://api.terraquakeapi.com/api/v1/earthquakes/today');
+    const data = await response.json();
+    console.log(`Found ${data.totalEarthquakes} events today`);
+    ```
+  </Tab>
+
+  <Tab title="Recent Events">
+    Returns earthquakes from the start of the current year until today.
+
+    ```bash cURL
+    curl https://api.terraquakeapi.com/api/v1/earthquakes/recent
+    ```
+
+    ```python Python
+    import requests
+
+    response = requests.get('https://api.terraquakeapi.com/api/v1/earthquakes/recent')
+    data = response.json()
+
+    # Iterate through events
+    for event in data['payload']:
+        print(f"{event['time']} - M{event['magnitude']} - {event['place']}")
+    ```
+
+    ```javascript JavaScript
+    const response = await fetch('https://api.terraquakeapi.com/api/v1/earthquakes/recent');
+    const data = await response.json();
+
+    data.payload.forEach(event => {
+      console.log(`${event.time} - M${event.magnitude} - ${event.place}`);
+    });
+    ```
+  </Tab>
+
+  <Tab title="Last Week">
+    Returns earthquakes from the last 7 days.
+
+    ```bash cURL
+    curl https://api.terraquakeapi.com/api/v1/earthquakes/last-week
+    ```
+
+    ```python Python
+    import requests
+
+    url = 'https://api.terraquakeapi.com/api/v1/earthquakes/last-week'
+    params = {'limit': 100, 'sort': '-magnitude'}
+
+    response = requests.get(url, params=params)
+    data = response.json()
+
+    print(f"Largest earthquake: M{data['payload'][0]['magnitude']}")
+    ```
+  </Tab>
+
+  <Tab title="Specific Month">
+    Query earthquakes for a specific month and year.
+
+    ```bash cURL
+    curl "https://api.terraquakeapi.com/api/v1/earthquakes/month?year=2024&month=3"
+    ```
+
+    ```python Python
+    import requests
+
+    url = 'https://api.terraquakeapi.com/api/v1/earthquakes/month'
+    params = {
+        'year': 2024,
+        'month': 3,
+        'limit': 50
+    }
+
+    response = requests.get(url, params=params)
+    data = response.json()
+    ```
+
+    ```javascript JavaScript
+    const url = new URL('https://api.terraquakeapi.com/api/v1/earthquakes/month');
+    url.searchParams.set('year', '2024');
+    url.searchParams.set('month', '3');
+
+    const response = await fetch(url);
+    const data = await response.json();
+    ```
+  </Tab>
+
+  <Tab title="Date Range">
+    Query earthquakes within a custom date range.
+
+    ```bash cURL
+    curl "https://api.terraquakeapi.com/api/v1/earthquakes/range?startdate=2024-01-01&enddate=2024-03-31"
+    ```
+
+    ```python Python
+    import requests
+
+    url = 'https://api.terraquakeapi.com/api/v1/earthquakes/range'
+    params = {
+        'startdate': '2024-01-01',
+        'enddate': '2024-03-31',
+        'limit': 100
+    }
+
+    response = requests.get(url, params=params)
+    earthquakes = response.json()
+    ```
+
+    <Warning>
+      Date format must be `YYYY-MM-DD`. Start date must be before or equal to end date.
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Magnitude Filtering
+
+Filter earthquakes by minimum magnitude to focus on significant events.
+
+```bash cURL
+curl "https://api.terraquakeapi.com/api/v1/earthquakes/magnitude?mag=4.0"
+```
+
+```python Python
+import requests
+
+# Find all earthquakes above magnitude 4.0
+url = 'https://api.terraquakeapi.com/api/v1/earthquakes/magnitude'
+params = {'mag': 4.0, 'sort': '-magnitude'}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+print(f"Found {data['totalEarthquakes']} earthquakes >= M4.0")
+for event in data['payload'][:5]:
+    print(f"M{event['magnitude']} - {event['place']}")
+```
+
+```javascript JavaScript
+const url = new URL('https://api.terraquakeapi.com/api/v1/earthquakes/magnitude');
+url.searchParams.set('mag', '4.0');
+url.searchParams.set('sort', '-magnitude');
+
+const response = await fetch(url);
+const data = await response.json();
+
+console.log(`Found ${data.totalEarthquakes} earthquakes >= M4.0`);
+```
+
+<Info>
+  The `mag` parameter represents the **minimum** magnitude threshold. Only earthquakes **greater than** this value will be returned.
+</Info>
+
+## Depth Filtering
+
+Filter earthquakes by minimum depth to study shallow or deep events.
+
+```bash cURL
+curl "https://api.terraquakeapi.com/api/v1/earthquakes/depth?depth=10"
+```
+
+```python Python
+import requests
+
+# Find deep earthquakes (>= 10km depth)
+url = 'https://api.terraquakeapi.com/api/v1/earthquakes/depth'
+params = {
+    'depth': 10,
+    'limit': 50,
+    'sort': '-depth'
+}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+# Analyze depth distribution
+depths = [event['depth'] for event in data['payload']]
+avg_depth = sum(depths) / len(depths)
+print(f"Average depth: {avg_depth:.2f} km")
+```
+
+```javascript JavaScript
+// Find shallow earthquakes (< 10km)
+const response = await fetch(
+  'https://api.terraquakeapi.com/api/v1/earthquakes/depth?depth=0&sort=depth'
+);
+const data = await response.json();
+
+const shallowQuakes = data.payload.filter(e => e.depth < 10);
+console.log(`${shallowQuakes.length} shallow earthquakes found`);
+```
+
+## Region Filtering
+
+Filter earthquakes by Italian region using predefined bounding boxes.
+
+```bash cURL
+curl "https://api.terraquakeapi.com/api/v1/earthquakes/region?region=Calabria"
+```
+
+```python Python
+import requests
+
+# Get earthquakes in Sicily
+url = 'https://api.terraquakeapi.com/api/v1/earthquakes/region'
+params = {
+    'region': 'Sicilia',
+    'limit': 100
+}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+print(f"Earthquakes in Sicily: {data['totalEarthquakes']}")
+```
+
+```javascript JavaScript
+const regions = ['Calabria', 'Sicilia', 'Campania'];
+
+for (const region of regions) {
+  const url = `https://api.terraquakeapi.com/api/v1/earthquakes/region?region=${region}`;
+  const response = await fetch(url);
+  const data = await response.json();
+  console.log(`${region}: ${data.totalEarthquakes} earthquakes`);
+}
+```
+
+<Note>
+  See the [Location Queries](/guides/location-queries) guide for the complete list of supported Italian regions.
+</Note>
+
+## Combining Multiple Filters
+
+The `/earthquakes/range` endpoint supports combining time, magnitude, and depth filters.
+
+<Steps>
+  <Step title="Define your criteria">
+    Determine what filters you need:
+    - Time range (required)
+    - Minimum magnitude (optional)
+    - Maximum depth (optional)
+  </Step>
+
+  <Step title="Build the query">
+    ```python Python
+    import requests
+
+    url = 'https://api.terraquakeapi.com/api/v1/earthquakes/range'
+    params = {
+        'startdate': '2024-01-01',
+        'enddate': '2024-03-31',
+        'minmag': 3.0,      # Minimum magnitude >= 3.0
+        'maxdepth': 30,     # Maximum depth <= 30km
+        'limit': 100
+    }
+
+    response = requests.get(url, params=params)
+    data = response.json()
+    ```
+
+    ```javascript JavaScript
+    const url = new URL('https://api.terraquakeapi.com/api/v1/earthquakes/range');
+    url.searchParams.set('startdate', '2024-01-01');
+    url.searchParams.set('enddate', '2024-03-31');
+    url.searchParams.set('minmag', '3.0');
+    url.searchParams.set('maxdepth', '30');
+
+    const response = await fetch(url);
+    const data = await response.json();
+    ```
+  </Step>
+
+  <Step title="Process results">
+    ```python Python
+    # Filter and analyze combined results
+    significant_events = [
+        event for event in data['payload']
+        if event['magnitude'] >= 4.0
+    ]
+
+    print(f"Total events: {data['totalEarthquakes']}")
+    print(f"Significant (M>=4): {len(significant_events)}")
+    ```
+  </Step>
+</Steps>
+
+## Common Use Cases
+
+### Find Recent Major Earthquakes
+
+```python Python
+import requests
+
+# Find earthquakes M >= 5.0 from the last week
+url = 'https://api.terraquakeapi.com/api/v1/earthquakes/last-week'
+params = {'limit': 100, 'sort': '-magnitude'}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+major_quakes = [
+    event for event in data['payload']
+    if event['magnitude'] >= 5.0
+]
+
+for quake in major_quakes:
+    print(f"M{quake['magnitude']} - {quake['place']} - {quake['time']}")
+```
+
+### Earthquakes in Specific Region Above Threshold
+
+```python Python
+import requests
+
+# Find M >= 3.0 earthquakes in Calabria
+url = 'https://api.terraquakeapi.com/api/v1/earthquakes/region'
+params = {'region': 'Calabria', 'limit': 200}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+significant = [
+    event for event in data['payload']
+    if event['magnitude'] >= 3.0
+]
+
+print(f"Found {len(significant)} significant earthquakes in Calabria")
+```
+
+### Deep vs Shallow Earthquakes
+
+```python Python
+import requests
+
+url = 'https://api.terraquakeapi.com/api/v1/earthquakes/recent'
+params = {'limit': 500}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+shallow = [e for e in data['payload'] if e['depth'] < 10]
+intermediate = [e for e in data['payload'] if 10 <= e['depth'] < 70]
+deep = [e for e in data['payload'] if e['depth'] >= 70]
+
+print(f"Shallow (<10km): {len(shallow)}")
+print(f"Intermediate (10-70km): {len(intermediate)}")
+print(f"Deep (>=70km): {len(deep)}")
+```
+
+## Performance Tips
+
+<CardGroup cols={2}>
+  <Card title="Use Pagination" icon="list">
+    Always use `limit` and `page` parameters to avoid large responses:
+    ```bash
+    ?limit=50&page=1
+    ```
+  </Card>
+
+  <Card title="Sort Results" icon="arrow-down-short-wide">
+    Sort by relevant fields to get the most important data first:
+    ```bash
+    ?sort=-magnitude  # Largest first
+    ?sort=-time       # Most recent first
+    ```
+  </Card>
+
+  <Card title="Select Fields" icon="filter">
+    Request only the fields you need:
+    ```bash
+    ?fields=time,magnitude,place
+    ```
+  </Card>
+
+  <Card title="Cache Results" icon="database">
+    Cache responses for time-based queries that don't change:
+    ```python
+    # Month data doesn't change
+    cache_ttl = 86400  # 24 hours
+    ```
+  </Card>
+</CardGroup>
+
+## Filter Comparison Table
+
+| Filter Type | Endpoint | Best For | Time Range |
+|-------------|----------|----------|------------|
+| Today | `/earthquakes/today` | Real-time monitoring | Current day |
+| Recent | `/earthquakes/recent` | Current year analysis | Year to date |
+| Last Week | `/earthquakes/last-week` | Weekly summaries | Last 7 days |
+| Month | `/earthquakes/month` | Historical monthly data | Specific month |
+| Date Range | `/earthquakes/range` | Custom analysis | Any range |
+| Magnitude | `/earthquakes/magnitude` | Significant events | Year to date |
+| Depth | `/earthquakes/depth` | Depth studies | Year to date |
+| Region | `/earthquakes/region` | Regional monitoring | Year to date |
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Location Queries" icon="location-dot" href="/guides/location-queries">
+    Learn about coordinate-based and radius searches
+  </Card>
+  <Card title="Best Practices" icon="star" href="/guides/best-practices">
+    Optimize your API usage and error handling
+  </Card>
+</CardGroup>

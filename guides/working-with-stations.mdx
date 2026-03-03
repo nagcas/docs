@@ -1,0 +1,632 @@
+---
+title: 'Working with Stations'
+description: 'Access seismic station network data, GeoJSON formats, and monitor station health'
+---
+
+## Overview
+
+The TerraQuake API provides access to the INGV (Istituto Nazionale di Geofisica e Vulcanologia) seismic monitoring station network. You can:
+
+- Retrieve all station data
+- Query individual stations by code
+- Get GeoJSON format for mapping
+- Filter by station status (open/closed)
+- Access network statistics
+
+## Seismic Station Network
+
+The INGV operates a comprehensive network of seismic monitoring stations across Italy. These stations continuously record ground motion and transmit data in real-time.
+
+### Station Data Structure
+
+Each station includes:
+
+- **Code**: Unique station identifier (e.g., "ACATE")
+- **Name**: Station name
+- **Coordinates**: Latitude, longitude, elevation
+- **Site**: Detailed location information
+- **Status**: `open`, `closed`, `inactive`, `deprecated`, or `unavailable`
+- **Creation Date**: When the station became operational
+- **Network**: Network code (usually "IV" for INGV)
+
+## Retrieving All Stations
+
+Get a paginated list of all seismic monitoring stations.
+
+```bash cURL
+curl "https://api.terraquakeapi.com/api/v1/stations?limit=50&page=1"
+```
+
+```python Python
+import requests
+
+url = 'https://api.terraquakeapi.com/api/v1/stations'
+params = {
+    'limit': 100,
+    'page': 1
+}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+print(f"Total stations: {data['totalStations']}")
+print(f"Page {data['pagination']['page']} of {data['pagination']['totalPages']}")
+
+# Display first 5 stations
+for station in data['payload'][:5]:
+    code = station['$']['code']
+    name = station['Site']['Name']
+    lat = station['Latitude']
+    lon = station['Longitude']
+    print(f"{code}: {name} ({lat}, {lon})")
+```
+
+```javascript JavaScript
+const url = new URL('https://api.terraquakeapi.com/api/v1/stations');
+url.searchParams.set('limit', '100');
+url.searchParams.set('page', '1');
+
+const response = await fetch(url);
+const data = await response.json();
+
+console.log(`Total stations: ${data.totalStations}`);
+
+data.payload.forEach(station => {
+  console.log(`${station.$.code}: ${station.Site.Name}`);
+});
+```
+
+### Pagination Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | number | 50 | Number of stations per page |
+| `page` | number | 1 | Page number (starts at 1) |
+
+## Query Station by Code
+
+Retrieve detailed information for a specific station using its unique code.
+
+```bash cURL
+curl "https://api.terraquakeapi.com/api/v1/stations/code?code=ACATE"
+```
+
+```python Python
+import requests
+
+url = 'https://api.terraquakeapi.com/api/v1/stations/code'
+params = {'code': 'ACATE'}  # Case-insensitive
+
+response = requests.get(url, params=params)
+data = response.json()
+
+if data['payload']:
+    station = data['payload'][0]
+    print(f"Station: {station['$']['code']}")
+    print(f"Name: {station['Site']['Name']}")
+    print(f"Location: {station['Latitude']}, {station['Longitude']}")
+    print(f"Elevation: {station['Elevation']} m")
+    print(f"Status: {station['$'].get('restrictedStatus', 'unknown')}")
+else:
+    print("Station not found")
+```
+
+```javascript JavaScript
+const stationCode = 'ACATE';
+const url = `https://api.terraquakeapi.com/api/v1/stations/code?code=${stationCode}`;
+
+const response = await fetch(url);
+const data = await response.json();
+
+if (data.payload.length > 0) {
+  const station = data.payload[0];
+  console.log(`Station: ${station.$.code}`);
+  console.log(`Location: ${station.Latitude}, ${station.Longitude}`);
+}
+```
+
+<Info>
+  Station code lookup is **case-insensitive**. Both `ACATE` and `acate` will return the same result.
+</Info>
+
+## GeoJSON Format for Mapping
+
+Get station data in GeoJSON format, ideal for mapping libraries like Leaflet, Mapbox, or Folium.
+
+```bash cURL
+curl "https://api.terraquakeapi.com/api/v1/stations/geojson?limit=500"
+```
+
+```python Python
+import requests
+import folium
+
+# Fetch stations in GeoJSON format
+url = 'https://api.terraquakeapi.com/api/v1/stations/geojson'
+params = {'limit': 500}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+# Create interactive map
+m = folium.Map(location=[42.5, 12.5], zoom_start=6)
+
+# Add station markers
+for feature in data['payload']:
+    coords = feature['geometry']['coordinates']
+    props = feature['properties']
+    
+    # Color by status
+    color = 'green' if props['status'] == 'open' else 'gray'
+    
+    folium.CircleMarker(
+        location=[coords[1], coords[0]],  # [lat, lon]
+        radius=5,
+        popup=f"<b>{props['code']}</b><br>{props['name']}<br>Status: {props['status']}",
+        color=color,
+        fill=True
+    ).add_to(m)
+
+m.save('seismic_stations_map.html')
+print(f"Map created with {len(data['payload'])} stations")
+```
+
+```javascript JavaScript
+// Fetch GeoJSON data
+const response = await fetch('https://api.terraquakeapi.com/api/v1/stations/geojson?limit=500');
+const data = await response.json();
+
+// Create GeoJSON FeatureCollection
+const geojson = {
+  type: 'FeatureCollection',
+  features: data.payload
+};
+
+// Use with Mapbox GL JS
+map.addSource('stations', {
+  type: 'geojson',
+  data: geojson
+});
+
+map.addLayer({
+  id: 'stations-layer',
+  type: 'circle',
+  source: 'stations',
+  paint: {
+    'circle-radius': 6,
+    'circle-color': [
+      'match',
+      ['get', 'status'],
+      'open', '#10b981',
+      '#6b7280'
+    ]
+  }
+});
+```
+
+### GeoJSON Structure
+
+```json
+{
+  "type": "Feature",
+  "geometry": {
+    "type": "Point",
+    "coordinates": [13.1234, 42.5678, 150]  // [lon, lat, elevation]
+  },
+  "properties": {
+    "code": "ACATE",
+    "name": "Acate",
+    "site": "Sicily, Italy",
+    "status": "open"
+  }
+}
+```
+
+## Station Status Filtering
+
+### Active (Open) Stations
+
+Retrieve only stations that are currently operational.
+
+```bash cURL
+curl "https://api.terraquakeapi.com/api/v1/stations/status/open"
+```
+
+```python Python
+import requests
+
+url = 'https://api.terraquakeapi.com/api/v1/stations/status/open'
+params = {'limit': 200}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+print(f"Active stations: {data['totalStationsOpen']}")
+
+# Get coordinates of all active stations
+active_coords = [
+    (station['Latitude'], station['Longitude'])
+    for station in data['payload']
+]
+
+print(f"Retrieved {len(active_coords)} active station coordinates")
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.terraquakeapi.com/api/v1/stations/status/open');
+const data = await response.json();
+
+console.log(`Active stations: ${data.totalStationsOpen}`);
+
+const activeCodes = data.payload.map(s => s.$.code);
+console.log('Active station codes:', activeCodes);
+```
+
+### Closed/Inactive Stations
+
+Retrieve stations that are no longer operational.
+
+```bash cURL
+curl "https://api.terraquakeapi.com/api/v1/stations/status/closed"
+```
+
+```python Python
+import requests
+
+url = 'https://api.terraquakeapi.com/api/v1/stations/status/closed'
+params = {'limit': 200}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+print(f"Closed stations: {data['totalStationsClosed']}")
+
+# Analyze closed stations
+for station in data['payload'][:10]:
+    code = station['$']['code']
+    status = station['$'].get('restrictedStatus', 'unknown')
+    print(f"{code}: {status}")
+```
+
+<Note>
+  Closed status includes: `closed`, `inactive`, `deprecated`, and `unavailable`.
+</Note>
+
+## Station Statistics
+
+Get aggregate statistics about the entire station network.
+
+```bash cURL
+curl "https://api.terraquakeapi.com/api/v1/stations/statistics"
+```
+
+```python Python
+import requests
+
+url = 'https://api.terraquakeapi.com/api/v1/stations/statistics'
+response = requests.get(url)
+data = response.json()
+
+stats = data['payload']['statistics']
+
+print(f"Total Stations: {stats['totalStations']}")
+print(f"Active: {stats['stationsOpen']} ({stats['stationsOpen']/stats['totalStations']*100:.1f}%)")
+print(f"Closed: {stats['stationsClosed']} ({stats['stationsClosed']/stats['totalStations']*100:.1f}%)")
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.terraquakeapi.com/api/v1/stations/statistics');
+const data = await response.json();
+
+const { totalStations, stationsOpen, stationsClosed } = data.payload.statistics;
+
+console.log(`Total: ${totalStations}`);
+console.log(`Active: ${stationsOpen} (${(stationsOpen/totalStations*100).toFixed(1)}%)`);
+console.log(`Closed: ${stationsClosed}`);
+```
+
+### Response Structure
+
+```json
+{
+  "payload": {
+    "type": "data",
+    "statistics": {
+      "totalStations": 450,
+      "stationsOpen": 380,
+      "stationsClosed": 70
+    }
+  }
+}
+```
+
+## Practical Use Cases
+
+### Building a Station Map
+
+<Steps>
+  <Step title="Fetch GeoJSON data">
+    ```python Python
+    import requests
+    import folium
+    from folium.plugins import MarkerCluster
+
+    url = 'https://api.terraquakeapi.com/api/v1/stations/geojson'
+    response = requests.get(url, params={'limit': 500})
+    data = response.json()
+    ```
+  </Step>
+
+  <Step title="Create base map">
+    ```python Python
+    # Center on Italy
+    m = folium.Map(
+        location=[42.5, 12.5],
+        zoom_start=6,
+        tiles='OpenStreetMap'
+    )
+
+    # Add marker cluster for better performance
+    marker_cluster = MarkerCluster().add_to(m)
+    ```
+  </Step>
+
+  <Step title="Add station markers">
+    ```python Python
+    for feature in data['payload']:
+        coords = feature['geometry']['coordinates']
+        props = feature['properties']
+        
+        # Create popup with station info
+        popup_html = f"""
+        <b>{props['code']}</b><br>
+        Name: {props['name']}<br>
+        Site: {props['site']}<br>
+        Status: {props['status']}<br>
+        Elevation: {coords[2]}m
+        """
+        
+        folium.Marker(
+            location=[coords[1], coords[0]],
+            popup=popup_html,
+            icon=folium.Icon(
+                color='green' if props['status'] == 'open' else 'gray',
+                icon='tower-broadcast',
+                prefix='fa'
+            )
+        ).add_to(marker_cluster)
+    ```
+  </Step>
+
+  <Step title="Save and display">
+    ```python Python
+    m.save('station_network.html')
+    print(f"Map saved with {len(data['payload'])} stations")
+    ```
+  </Step>
+</Steps>
+
+### Monitoring Network Health
+
+```python Python
+import requests
+import time
+from datetime import datetime
+
+class NetworkMonitor:
+    def __init__(self):
+        self.base_url = 'https://api.terraquakeapi.com/api/v1'
+        self.previous_stats = None
+    
+    def check_network_health(self):
+        """Monitor station network health"""
+        url = f'{self.base_url}/stations/statistics'
+        response = requests.get(url)
+        data = response.json()
+        
+        stats = data['payload']['statistics']
+        
+        print(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}]")
+        print(f"Total Stations: {stats['totalStations']}")
+        print(f"Active: {stats['stationsOpen']}")
+        print(f"Inactive: {stats['stationsClosed']}")
+        
+        # Check for changes
+        if self.previous_stats:
+            if stats['stationsOpen'] < self.previous_stats['stationsOpen']:
+                diff = self.previous_stats['stationsOpen'] - stats['stationsOpen']
+                print(f"⚠️  WARNING: {diff} station(s) went offline!")
+                self.alert_station_changes()
+            elif stats['stationsOpen'] > self.previous_stats['stationsOpen']:
+                diff = stats['stationsOpen'] - self.previous_stats['stationsOpen']
+                print(f"✅ {diff} station(s) came online")
+        
+        self.previous_stats = stats
+        
+        # Calculate network coverage percentage
+        uptime_pct = (stats['stationsOpen'] / stats['totalStations']) * 100
+        print(f"Network Coverage: {uptime_pct:.1f}%")
+        
+        if uptime_pct < 80:
+            print("⚠️  WARNING: Network coverage below 80%!")
+    
+    def alert_station_changes(self):
+        """Identify which stations changed status"""
+        # Implementation would compare current vs previous station lists
+        pass
+
+# Run monitoring loop
+monitor = NetworkMonitor()
+while True:
+    monitor.check_network_health()
+    time.sleep(3600)  # Check every hour
+```
+
+### Find Nearest Station to Location
+
+```python Python
+import requests
+from math import radians, sin, cos, sqrt, atan2
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """Calculate distance between two points on Earth"""
+    R = 6371  # Earth's radius in km
+    
+    lat1, lon1, lat2, lon2 = map(radians, [lat1, lon1, lat2, lon2])
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    
+    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+    c = 2 * atan2(sqrt(a), sqrt(1-a))
+    
+    return R * c
+
+def find_nearest_station(target_lat, target_lon):
+    """Find the nearest seismic station to a coordinate"""
+    url = 'https://api.terraquakeapi.com/api/v1/stations/status/open'
+    params = {'limit': 500}
+    
+    response = requests.get(url, params=params)
+    data = response.json()
+    
+    nearest = None
+    min_distance = float('inf')
+    
+    for station in data['payload']:
+        station_lat = station['Latitude']
+        station_lon = station['Longitude']
+        
+        distance = haversine_distance(target_lat, target_lon, station_lat, station_lon)
+        
+        if distance < min_distance:
+            min_distance = distance
+            nearest = station
+    
+    return nearest, min_distance
+
+# Example: Find nearest station to Rome
+nearest, distance = find_nearest_station(41.9028, 12.4964)
+if nearest:
+    print(f"Nearest station: {nearest['$']['code']}")
+    print(f"Name: {nearest['Site']['Name']}")
+    print(f"Distance: {distance:.2f} km")
+```
+
+### Station Coverage Analysis
+
+```python Python
+import requests
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Fetch all stations
+url = 'https://api.terraquakeapi.com/api/v1/stations'
+response = requests.get(url, params={'limit': 500})
+data = response.json()
+
+# Extract data
+stations = []
+for station in data['payload']:
+    stations.append({
+        'code': station['$']['code'],
+        'name': station['Site']['Name'],
+        'latitude': station['Latitude'],
+        'longitude': station['Longitude'],
+        'elevation': station['Elevation'],
+        'status': station['$'].get('restrictedStatus', 'unknown')
+    })
+
+df = pd.DataFrame(stations)
+
+# Analyze by status
+status_counts = df['status'].value_counts()
+print("\nStation Status Distribution:")
+print(status_counts)
+
+# Elevation analysis
+print(f"\nElevation Range:")
+print(f"Min: {df['elevation'].min():.0f}m")
+print(f"Max: {df['elevation'].max():.0f}m")
+print(f"Mean: {df['elevation'].mean():.0f}m")
+
+# Plot station distribution
+plt.figure(figsize=(10, 6))
+plt.scatter(df['longitude'], df['latitude'], 
+            c=df['status'].map({'open': 'green', 'closed': 'red'}),
+            alpha=0.6)
+plt.xlabel('Longitude')
+plt.ylabel('Latitude')
+plt.title('INGV Seismic Station Network')
+plt.grid(True, alpha=0.3)
+plt.savefig('station_distribution.png')
+print("\nPlot saved: station_distribution.png")
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use GeoJSON for Maps" icon="map">
+    The `/stations/geojson` endpoint is optimized for mapping libraries and includes pre-formatted coordinates.
+  </Card>
+
+  <Card title="Cache Station Data" icon="database">
+    Station data changes infrequently. Cache responses for 24 hours:
+    ```python
+    cache_ttl = 86400  # 24 hours
+    ```
+  </Card>
+
+  <Card title="Filter by Status" icon="filter">
+    Use status endpoints (`/status/open`) when you only need active stations to reduce payload size.
+  </Card>
+
+  <Card title="Batch Queries" icon="layer-group">
+    Use high `limit` values (up to 500) to minimize API calls when fetching all stations.
+  </Card>
+</CardGroup>
+
+## Error Handling
+
+```python Python
+import requests
+from requests.exceptions import RequestException
+
+def get_station_safely(station_code):
+    """Safely retrieve station data with error handling"""
+    url = 'https://api.terraquakeapi.com/api/v1/stations/code'
+    
+    try:
+        response = requests.get(url, params={'code': station_code}, timeout=10)
+        response.raise_for_status()  # Raise exception for 4xx/5xx
+        
+        data = response.json()
+        
+        if not data['payload']:
+            print(f"Station '{station_code}' not found")
+            return None
+        
+        return data['payload'][0]
+        
+    except RequestException as e:
+        print(f"API request failed: {e}")
+        return None
+    except (KeyError, ValueError) as e:
+        print(f"Invalid response format: {e}")
+        return None
+
+# Usage
+station = get_station_safely('ACATE')
+if station:
+    print(f"Found: {station['$']['code']}")
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Location Queries" icon="location-dot" href="/guides/location-queries">
+    Combine station data with earthquake location queries
+  </Card>
+  <Card title="Best Practices" icon="star" href="/guides/best-practices">
+    Learn API optimization and error handling strategies
+  </Card>
+</CardGroup>

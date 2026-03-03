@@ -1,0 +1,441 @@
+---
+title: 'Pagination'
+description: 'Learn how to paginate through earthquake data in the TerraQuake API'
+---
+
+## Overview
+
+All TerraQuake API endpoints that return lists of earthquakes support pagination to help you efficiently retrieve large datasets. Pagination allows you to request data in manageable chunks rather than fetching everything at once.
+
+## Pagination Parameters
+
+Use query parameters to control pagination:
+
+<ParamField query="page" type="integer" default="1">
+  The page number to retrieve. Must be a positive integer greater than 0.
+  
+  Example: `?page=2`
+</ParamField>
+
+<ParamField query="limit" type="integer" default="50">
+  Number of results per page. Must be a positive integer between 1 and 100.
+  
+  Example: `?limit=25`
+</ParamField>
+
+### Default Values
+
+- **Default page:** `1` (first page)
+- **Default limit:** `50` results per page
+- **Maximum limit:** `100` results per page (hard cap)
+
+<Warning>
+  If you request a `limit` greater than 100, the API will automatically cap it at 100 to prevent performance issues.
+</Warning>
+
+## Pagination Response Format
+
+Paginated responses include a `pagination` object with metadata about the current page and available data:
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Earthquakes recent events",
+  "payload": [
+    {
+      "type": "Feature",
+      "properties": {
+        "mag": 4.5,
+        "place": "10 km NE of Rome, Italy",
+        "time": 1709481234000
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [12.5, 41.9, 10.0]
+      }
+    }
+    // ... more earthquake features
+  ],
+  "totalEarthquakes": 1247,
+  "pagination": {
+    "page": 2,
+    "totalPages": 25,
+    "limit": 50,
+    "hasMore": true
+  },
+  "meta": {
+    "method": "GET",
+    "path": "/earthquakes/recent?page=2&limit=50",
+    "timestamp": "2026-03-03T10:30:45.123Z"
+  }
+}
+```
+
+### Pagination Fields
+
+<ResponseField name="pagination.page" type="integer">
+  Current page number
+</ResponseField>
+
+<ResponseField name="pagination.totalPages" type="integer">
+  Total number of pages available
+</ResponseField>
+
+<ResponseField name="pagination.limit" type="integer">
+  Number of results per page (after applying the 100 max cap)
+</ResponseField>
+
+<ResponseField name="pagination.hasMore" type="boolean">
+  Whether more pages exist after the current page. Use this to determine if you should fetch the next page.
+</ResponseField>
+
+<ResponseField name="totalEarthquakes" type="integer">
+  Total number of earthquake records available (across all pages)
+</ResponseField>
+
+## How Pagination Works
+
+The API uses **offset-based pagination** with manual slicing:
+
+1. **Calculate offset:** `startIndex = (page - 1) × limit`
+2. **Calculate end:** `endIndex = startIndex + limit`
+3. **Slice data:** Return items from `startIndex` to `endIndex`
+4. **Cap page number:** If requested page exceeds `totalPages`, return the last available page
+
+### Implementation Example
+
+From the source code:
+
+```javascript
+const page = Math.max(parseInt(query.page, 10) || 1, 1);
+const limitReq = Math.max(parseInt(query.limit, 10) || 50, 1);
+const limit = Math.min(limitReq, 100); // maximum cap for limit
+
+const totalPages = Math.ceil(totalItems / limit);
+const currentPage = Math.min(page, totalPages === 0 ? 1 : totalPages);
+
+const start = (currentPage - 1) * limit;
+const slice = projected.slice(start, start + limit);
+```
+
+Source: `/home/daytona/workspace/source/backend/src/utils/processFeatures.js:99-105`
+
+## Examples
+
+### Basic Pagination
+
+<CodeGroup>
+
+```bash cURL
+# Get first page (default)
+curl "https://api.terraquakeapi.com/earthquakes/recent"
+
+# Get second page with 25 results
+curl "https://api.terraquakeapi.com/earthquakes/recent?page=2&limit=25"
+
+# Get maximum results per page
+curl "https://api.terraquakeapi.com/earthquakes/recent?limit=100"
+```
+
+```javascript JavaScript
+// Fetch first page
+const response = await fetch(
+  'https://api.terraquakeapi.com/earthquakes/recent?page=1&limit=50'
+);
+const data = await response.json();
+
+console.log(`Page ${data.pagination.page} of ${data.pagination.totalPages}`);
+console.log(`Has more pages: ${data.pagination.hasMore}`);
+console.log(`Total earthquakes: ${data.totalEarthquakes}`);
+```
+
+```python Python
+import requests
+
+# Fetch first page
+response = requests.get(
+    'https://api.terraquakeapi.com/earthquakes/recent',
+    params={'page': 1, 'limit': 50}
+)
+data = response.json()
+
+print(f"Page {data['pagination']['page']} of {data['pagination']['totalPages']}")
+print(f"Has more: {data['pagination']['hasMore']}")
+print(f"Total earthquakes: {data['totalEarthquakes']}")
+```
+
+</CodeGroup>
+
+### Paginating Through All Results
+
+<CodeGroup>
+
+```javascript JavaScript
+async function fetchAllEarthquakes() {
+  const allEarthquakes = [];
+  let page = 1;
+  let hasMore = true;
+
+  while (hasMore) {
+    const response = await fetch(
+      `https://api.terraquakeapi.com/earthquakes/recent?page=${page}&limit=100`
+    );
+    const data = await response.json();
+
+    allEarthquakes.push(...data.payload);
+    
+    hasMore = data.pagination.hasMore;
+    page++;
+
+    console.log(`Fetched page ${data.pagination.page}/${data.pagination.totalPages}`);
+    
+    // Respect rate limits
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+
+  return allEarthquakes;
+}
+
+const earthquakes = await fetchAllEarthquakes();
+console.log(`Total earthquakes fetched: ${earthquakes.length}`);
+```
+
+```python Python
+import requests
+import time
+
+def fetch_all_earthquakes():
+    all_earthquakes = []
+    page = 1
+    has_more = True
+    
+    while has_more:
+        response = requests.get(
+            'https://api.terraquakeapi.com/earthquakes/recent',
+            params={'page': page, 'limit': 100}
+        )
+        data = response.json()
+        
+        all_earthquakes.extend(data['payload'])
+        
+        has_more = data['pagination']['hasMore']
+        page += 1
+        
+        print(f"Fetched page {data['pagination']['page']}/{data['pagination']['totalPages']}")
+        
+        # Respect rate limits
+        time.sleep(0.1)
+    
+    return all_earthquakes
+
+earthquakes = fetch_all_earthquakes()
+print(f"Total earthquakes fetched: {len(earthquakes)}")
+```
+
+```go Go
+package main
+
+import (
+    "encoding/json"
+    "fmt"
+    "net/http"
+    "time"
+)
+
+type Response struct {
+    Payload    []interface{} `json:"payload"`
+    Pagination struct {
+        Page       int  `json:"page"`
+        TotalPages int  `json:"totalPages"`
+        HasMore    bool `json:"hasMore"`
+    } `json:"pagination"`
+}
+
+func fetchAllEarthquakes() ([]interface{}, error) {
+    var allEarthquakes []interface{}
+    page := 1
+    hasMore := true
+
+    for hasMore {
+        url := fmt.Sprintf(
+            "https://api.terraquakeapi.com/earthquakes/recent?page=%d&limit=100",
+            page,
+        )
+        
+        resp, err := http.Get(url)
+        if err != nil {
+            return nil, err
+        }
+        
+        var data Response
+        json.NewDecoder(resp.Body).Decode(&data)
+        resp.Body.Close()
+        
+        allEarthquakes = append(allEarthquakes, data.Payload...)
+        
+        hasMore = data.Pagination.HasMore
+        page++
+        
+        fmt.Printf("Fetched page %d/%d\n", data.Pagination.Page, data.Pagination.TotalPages)
+        
+        // Respect rate limits
+        time.Sleep(100 * time.Millisecond)
+    }
+
+    return allEarthquakes, nil
+}
+```
+
+</CodeGroup>
+
+### Smart Pagination with Rate Limit Handling
+
+```javascript
+async function fetchEarthquakesWithRateLimit() {
+  const allEarthquakes = [];
+  let page = 1;
+
+  while (true) {
+    const response = await fetch(
+      `https://api.terraquakeapi.com/earthquakes/recent?page=${page}&limit=100`
+    );
+
+    // Check rate limit headers
+    const remaining = parseInt(response.headers.get('X-RateLimit-Remaining'));
+    
+    if (response.status === 429) {
+      const retryAfter = parseInt(response.headers.get('Retry-After')) * 1000;
+      console.log(`Rate limited. Waiting ${retryAfter}ms...`);
+      await new Promise(resolve => setTimeout(resolve, retryAfter));
+      continue; // Retry same page
+    }
+
+    const data = await response.json();
+    allEarthquakes.push(...data.payload);
+
+    console.log(`Page ${page}/${data.pagination.totalPages} - Remaining requests: ${remaining}`);
+
+    if (!data.pagination.hasMore) break;
+    
+    page++;
+
+    // Slow down if approaching rate limit
+    if (remaining < 10) {
+      await new Promise(resolve => setTimeout(resolve, 500));
+    }
+  }
+
+  return allEarthquakes;
+}
+```
+
+## Combining Pagination with Filters
+
+You can combine pagination with other query parameters:
+
+```bash
+# Paginate through earthquakes in a specific region
+curl "https://api.terraquakeapi.com/earthquakes/region?region=italy&page=2&limit=50"
+
+# Paginate through high-magnitude earthquakes
+curl "https://api.terraquakeapi.com/earthquakes/magnitude?mag=5.0&page=1&limit=25"
+
+# Paginate through earthquakes in a date range
+curl "https://api.terraquakeapi.com/earthquakes/date-range?startdate=2026-01-01&enddate=2026-03-03&page=3&limit=100"
+```
+
+## Error Handling
+
+### Invalid Page Number
+
+If you request a page less than 1:
+
+```json
+{
+  "success": false,
+  "status": 400,
+  "message": "The page parameter must be a positive integer greater than 0. Example: ?page=2",
+  "meta": {
+    "timestamp": "2026-03-03T10:30:45.123Z"
+  }
+}
+```
+
+### Invalid Limit
+
+If you request a limit less than 1:
+
+```json
+{
+  "success": false,
+  "status": 400,
+  "message": "The limit parameter must be a positive integer greater than 0. Example: ?limit=50",
+  "meta": {
+    "timestamp": "2026-03-03T10:30:45.123Z"
+  }
+}
+```
+
+### Page Beyond Available Data
+
+<Info>
+  If you request a page number greater than `totalPages`, the API automatically returns the last available page instead of an error.
+</Info>
+
+```javascript
+// If there are only 10 pages, requesting page 100 returns page 10
+const response = await fetch(
+  'https://api.terraquakeapi.com/earthquakes/recent?page=100'
+);
+const data = await response.json();
+console.log(data.pagination.page); // 10 (last available page)
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Use Appropriate Page Size" icon="list">
+    Request only what you need. Smaller page sizes (10-25) for UI display, larger (50-100) for data processing.
+  </Card>
+  
+  <Card title="Check hasMore" icon="check">
+    Always check the `hasMore` field to determine if there are more pages, rather than comparing page numbers.
+  </Card>
+  
+  <Card title="Handle Empty Results" icon="circle-exclamation">
+    If `totalEarthquakes` is 0, the payload will be an empty array. Handle this gracefully in your application.
+  </Card>
+  
+  <Card title="Respect Rate Limits" icon="gauge-high">
+    When paginating through many pages, add delays between requests to avoid hitting rate limits.
+  </Card>
+</CardGroup>
+
+## Performance Tips
+
+1. **Cache Results:** Store fetched pages in memory or a local database to avoid redundant requests
+2. **Use Filters:** Combine pagination with filters (magnitude, region, date) to reduce the total number of results
+3. **Parallel Requests:** For non-sequential pages, you can fetch multiple pages in parallel (respect rate limits)
+4. **Progressive Loading:** For UI applications, load the first page immediately and fetch subsequent pages on-demand
+
+## Common Questions
+
+<AccordionGroup>
+  <Accordion title="What happens if I request page 0 or a negative page?">
+    The API validates page numbers and returns a 400 error if the page is less than 1.
+  </Accordion>
+
+  <Accordion title="Can I request more than 100 results per page?">
+    No, the API enforces a hard cap of 100 results per page. Requests for higher limits are automatically capped at 100.
+  </Accordion>
+
+  <Accordion title="Does the pagination data change over time?">
+    Yes, as new earthquakes occur, the total count and number of pages may increase. Results on each page may also shift.
+  </Accordion>
+
+  <Accordion title="How do I know if I'm on the last page?">
+    Check if `pagination.hasMore` is `false` or if `pagination.page === pagination.totalPages`.
+  </Accordion>
+</AccordionGroup>

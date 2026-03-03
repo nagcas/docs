@@ -1,0 +1,413 @@
+---
+title: 'Contributing Guide'
+description: 'Help build and improve TerraQuake API - contributions welcome!'
+icon: 'code-pull-request'
+---
+
+Thank you for considering contributing to TerraQuake API! This project is open source and welcomes contributions from developers, geologists, researchers, and anyone interested in seismic data.
+
+## Ways to Contribute
+
+<CardGroup cols={2}>
+  <Card title="Report Bugs" icon="bug">
+    Found an issue? Report it on GitHub Issues
+  </Card>
+  
+  <Card title="Suggest Features" icon="lightbulb">
+    Have an idea? Open a feature request
+  </Card>
+  
+  <Card title="Improve Documentation" icon="book">
+    Help make our docs better and clearer
+  </Card>
+  
+  <Card title="Write Code" icon="code">
+    Fix bugs, add features, or improve performance
+  </Card>
+</CardGroup>
+
+## Getting Started
+
+### Prerequisites
+
+Before you begin, make sure you have:
+
+- **Node.js** (v18 or higher recommended)
+- **Git** for version control
+- **MongoDB** (if working on database features)
+- A **GitHub account**
+
+### Fork and Clone
+
+1. **Fork the repository** on GitHub
+   - Visit [https://github.com/nagcas/TerraQuakeApi](https://github.com/nagcas/TerraQuakeApi)
+   - Click the "Fork" button in the top right
+
+2. **Clone your fork** to your local machine:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/TerraQuakeApi.git
+cd TerraQuakeApi
+```
+
+3. **Add the upstream remote** to stay in sync:
+
+```bash
+git remote add upstream https://github.com/nagcas/TerraQuakeApi.git
+```
+
+### Set Up Development Environment
+
+#### Backend Setup
+
+```bash
+# Navigate to backend directory
+cd backend
+
+# Install dependencies
+npm install
+
+# Copy environment variables
+cp .env-example .env
+
+# Edit .env with your configuration
+# Add database URL, API keys, etc.
+
+# Start development server
+npm run dev
+```
+
+The backend will run on `http://localhost:5001` by default.
+
+#### Frontend Setup
+
+```bash
+# Navigate to frontend directory (in a new terminal)
+cd frontend
+
+# Install dependencies
+npm install
+
+# Copy environment variables if needed
+cp .env-example .env
+
+# Start development server
+npm run dev
+```
+
+The frontend will run on `http://localhost:5173` by default.
+
+### Development Workflow
+
+1. **Create a new branch** for your feature or fix:
+
+```bash
+git checkout -b feature/your-feature-name
+# or
+git checkout -b fix/issue-description
+```
+
+2. **Make your changes**
+   - Write clean, documented code
+   - Follow existing code style and conventions
+   - Add tests for new features
+
+3. **Test your changes**
+
+```bash
+# Run tests
+npm run tests
+
+# Run linter
+npm run lint
+
+# Fix linting issues automatically
+npm run lint:fix
+```
+
+4. **Commit your changes**
+
+```bash
+git add .
+git commit -m "feat: add new feature description"
+# or
+git commit -m "fix: resolve issue description"
+```
+
+<Note>
+  Use conventional commit messages:
+  - `feat:` for new features
+  - `fix:` for bug fixes
+  - `docs:` for documentation changes
+  - `refactor:` for code refactoring
+  - `test:` for adding tests
+  - `chore:` for maintenance tasks
+</Note>
+
+5. **Push to your fork**
+
+```bash
+git push origin feature/your-feature-name
+```
+
+6. **Open a Pull Request**
+   - Go to the original repository on GitHub
+   - Click "New Pull Request"
+   - Select your fork and branch
+   - Fill out the PR template with details
+   - Submit for review
+
+## Pull Request Guidelines
+
+### Before Submitting
+
+<Steps>
+  <Step title="Test Thoroughly">
+    Ensure all tests pass and your changes work as expected
+  </Step>
+  
+  <Step title="Update Documentation">
+    Add or update documentation for any new features or changes
+  </Step>
+  
+  <Step title="Follow Code Style">
+    Run the linter and fix any issues (`npm run lint:fix`)
+  </Step>
+  
+  <Step title="Keep Changes Focused">
+    Each PR should address a single feature or fix
+  </Step>
+  
+  <Step title="Write Clear Descriptions">
+    Explain what changes you made and why
+  </Step>
+</Steps>
+
+### PR Template
+
+When opening a pull request, please include:
+
+```markdown
+## Description
+Brief description of what this PR does
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Documentation update
+- [ ] Performance improvement
+- [ ] Code refactoring
+
+## Testing
+- [ ] All existing tests pass
+- [ ] Added new tests for new features
+- [ ] Manually tested changes
+
+## Checklist
+- [ ] Code follows project style guidelines
+- [ ] Self-reviewed my code
+- [ ] Commented complex code sections
+- [ ] Updated documentation
+- [ ] No breaking changes (or documented if necessary)
+```
+
+## Code Style Guidelines
+
+### JavaScript/Node.js
+
+This project uses **StandardJS** for code style:
+
+```javascript
+// Good
+const fetchEarthquakes = async (params) => {
+  try {
+    const response = await axios.get(url, { params })
+    return response.data
+  } catch (error) {
+    console.error('Error fetching earthquakes:', error.message)
+    throw error
+  }
+}
+
+// Use descriptive variable names
+// Add comments for complex logic
+// Handle errors appropriately
+// Follow async/await patterns
+```
+
+### General Principles
+
+- **Keep code clean and documented**
+- **Write self-explanatory code** with clear variable names
+- **Add comments** for complex logic or algorithms
+- **Follow DRY** (Don't Repeat Yourself) principle
+- **Use consistent formatting** throughout
+- **Handle errors gracefully** with meaningful messages
+
+## Testing
+
+### Running Tests
+
+```bash
+# Run all tests with coverage
+npm run tests
+
+# Run linter
+npm run lint
+```
+
+### Writing Tests
+
+When adding new features, please include tests:
+
+```javascript
+// Example test structure
+import { test } from 'node:test'
+import assert from 'node:assert'
+
+test('fetchEarthquakes returns valid data', async (t) => {
+  const result = await fetchEarthquakes({ limit: 10 })
+  
+  assert.ok(result.success)
+  assert.strictEqual(result.code, 200)
+  assert.ok(Array.isArray(result.payload))
+})
+```
+
+## Code of Conduct
+
+This project follows a Code of Conduct to ensure a welcoming environment for all contributors.
+
+### Our Standards
+
+- **Be respectful** and considerate of others
+- **Be collaborative** and help fellow contributors
+- **Accept constructive criticism** gracefully
+- **Focus on what's best** for the community
+- **Show empathy** towards other community members
+
+### Unacceptable Behavior
+
+- Harassment, discrimination, or offensive comments
+- Trolling, insulting, or derogatory remarks
+- Publishing others' private information
+- Other conduct that's inappropriate in a professional setting
+
+<Warning>
+  Violations of the Code of Conduct may result in temporary or permanent ban from the project.
+</Warning>
+
+For full details, see [CODE_OF_CONDUCT.md](https://github.com/nagcas/TerraQuakeApi/blob/main/CODE_OF_CONDUCT.md) in the repository.
+
+## Community
+
+### Join the Discussion
+
+<Card title="Discord Community" icon="discord" href="https://discord.gg/RDBp8KJB">
+  Join our Discord server to connect, share ideas, and collaborate with other contributors
+</Card>
+
+### Get Help
+
+If you need help or have questions:
+
+1. **Check existing documentation** and code comments
+2. **Search GitHub Issues** for similar questions
+3. **Ask in Discord** for real-time community support
+4. **Open a GitHub Discussion** for broader topics
+5. **Create an Issue** if you've found a bug
+
+## Hacktoberfest 2025
+
+<Info>
+  TerraQuake API is participating in **Hacktoberfest 2025**!
+  
+  All contributions during October count toward the event. Look for issues labeled `hacktoberfest` for suitable tasks.
+</Info>
+
+### Good First Issues
+
+New to the project? Look for issues labeled:
+
+- `good first issue` - Beginner-friendly tasks
+- `documentation` - Documentation improvements
+- `help wanted` - Tasks where we need assistance
+
+<Card title="View Issues" icon="github" href="https://github.com/nagcas/TerraQuakeApi/issues">
+  Browse open issues and find something to work on
+</Card>
+
+## Project Structure
+
+```
+TerraQuakeApi/
+├── backend/               # Node.js + Express API
+│   ├── src/
+│   │   ├── controllers/   # Request handlers
+│   │   ├── routes/        # API routes
+│   │   ├── services/      # Business logic
+│   │   ├── utils/         # Helper functions
+│   │   └── app.js         # Application entry point
+│   ├── package.json
+│   └── .env-example
+├── frontend/              # React + Vite interface
+│   ├── src/
+│   │   ├── components/    # React components
+│   │   ├── pages/         # Page components
+│   │   └── App.jsx        # Application root
+│   ├── package.json
+│   └── .env-example
+├── README.md
+├── CONTRIBUTING.md
+├── CODE_OF_CONDUCT.md
+└── LICENSE.md
+```
+
+## Key Technologies
+
+### Backend
+- **Express.js** - Web framework
+- **MongoDB** - Database (planned)
+- **Mongoose** - ODM for MongoDB
+- **Axios** - HTTP client for INGV data
+- **JWT** - Authentication (future)
+- **Swagger** - API documentation
+
+### Frontend
+- **React 19** - UI library
+- **Vite** - Build tool
+- **Tailwind CSS 4** - Styling
+- **React Router** - Navigation
+
+## Recognition
+
+All contributors are recognized in our project:
+
+- Listed in the README credits section
+- Mentioned in release notes for significant contributions
+- Featured in the community Discord
+
+## Questions?
+
+Still have questions about contributing?
+
+<CardGroup cols={2}>
+  <Card title="GitHub Issues" icon="circle-question" href="https://github.com/nagcas/TerraQuakeApi/issues">
+    Ask questions or report issues
+  </Card>
+  
+  <Card title="Discord Chat" icon="discord" href="https://discord.gg/RDBp8KJB">
+    Get real-time help from the community
+  </Card>
+</CardGroup>
+
+---
+
+## Project Maintainer
+
+**Dr. Gianluca Chiaravalloti**
+- Web Developer & Geologist
+- [Portfolio](https://portfolio-gianluca-phi.vercel.app/)
+- [GitHub](https://github.com/nagcas)
+
+Thank you for contributing to TerraQuake API and helping make seismic data more accessible! 🌍

@@ -1,0 +1,606 @@
+---
+title: 'Response Format'
+description: 'Understand the structure and format of TerraQuake API responses'
+---
+
+## Overview
+
+All successful TerraQuake API responses follow a consistent, standardized format. This makes it easy to parse responses and extract the data you need across all endpoints.
+
+## Standard Response Structure
+
+Every successful API response includes these core fields:
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Earthquakes recent events",
+  "payload": [...],
+  "meta": {
+    "method": "GET",
+    "path": "/earthquakes/recent?limit=50",
+    "timestamp": "2026-03-03T10:30:45.123Z"
+  },
+  "totalEarthquakes": 1247,
+  "pagination": {
+    "page": 1,
+    "totalPages": 25,
+    "limit": 50,
+    "hasMore": true
+  }
+}
+```
+
+### Core Response Fields
+
+<ResponseField name="success" type="boolean" required>
+  Indicates whether the request was successful. Always `true` for successful responses, `false` for errors.
+</ResponseField>
+
+<ResponseField name="code" type="integer" required>
+  HTTP status code. `200` for successful requests.
+</ResponseField>
+
+<ResponseField name="status" type="string" required>
+  HTTP status text. `"OK"` for successful requests.
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  Human-readable description of the response. Examples:
+  - `"Earthquakes recent events"`
+  - `"Earthquakes filtered by magnitude"`
+  - `"Seismic stations retrieved successfully"`
+</ResponseField>
+
+<ResponseField name="payload" type="array" required>
+  The main response data. Contains an array of earthquake features or other requested resources.
+</ResponseField>
+
+<ResponseField name="meta" type="object" required>
+  Metadata about the request and response.
+  
+  <Expandable title="properties">
+    <ResponseField name="method" type="string">
+      HTTP method used for the request (e.g., `"GET"`, `"POST"`)
+    </ResponseField>
+    
+    <ResponseField name="path" type="string">
+      The request path including query parameters
+    </ResponseField>
+    
+    <ResponseField name="timestamp" type="string">
+      ISO 8601 timestamp of when the response was generated
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Additional Fields
+
+Depending on the endpoint, responses may include:
+
+<ResponseField name="totalEarthquakes" type="integer">
+  Total number of earthquake records available (across all pages)
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination metadata. See [Pagination](/concepts/pagination) for details.
+  
+  <Expandable title="properties">
+    <ResponseField name="page" type="integer">
+      Current page number
+    </ResponseField>
+    
+    <ResponseField name="totalPages" type="integer">
+      Total number of pages available
+    </ResponseField>
+    
+    <ResponseField name="limit" type="integer">
+      Number of results per page
+    </ResponseField>
+    
+    <ResponseField name="hasMore" type="boolean">
+      Whether more pages exist after the current page
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Response Builder Implementation
+
+The API uses a standardized utility to build all responses:
+
+```javascript
+export const buildResponse = (
+  req = {}, 
+  message = '', 
+  payload = null, 
+  total = null, 
+  rest = {}
+) => ({
+  success: true,
+  code: 200,
+  status: 'OK',
+  message,
+  payload,
+  meta: {
+    method: req.method?.toUpperCase() || null,
+    path: req.originalUrl || null,
+    timestamp: new Date().toISOString()
+  },
+  ...rest
+})
+```
+
+Source: `/home/daytona/workspace/source/backend/src/utils/buildResponse.js:11-23`
+
+## Earthquake Data Format (GeoJSON)
+
+Earthquake data in the `payload` follows the GeoJSON Feature format:
+
+```json
+{
+  "type": "Feature",
+  "id": "20260303_0000001",
+  "properties": {
+    "mag": 4.5,
+    "place": "10 km NE of Rome, Italy",
+    "time": 1709481234000,
+    "updated": 1709481300000,
+    "tz": null,
+    "url": "https://terremoti.ingv.it/event/20260303_0000001",
+    "detail": "https://terremoti.ingv.it/fdsnws/event/1/query?eventid=20260303_0000001",
+    "felt": null,
+    "cdi": null,
+    "mmi": null,
+    "alert": null,
+    "status": "automatic",
+    "tsunami": 0,
+    "sig": 312,
+    "net": "iv",
+    "code": "20260303_0000001",
+    "ids": ",iv20260303_0000001,",
+    "sources": ",iv,",
+    "types": ",origin,phase-data,",
+    "nst": null,
+    "dmin": null,
+    "rms": 0.3,
+    "gap": null,
+    "magType": "ml",
+    "type": "earthquake",
+    "title": "M 4.5 - 10 km NE of Rome, Italy"
+  },
+  "geometry": {
+    "type": "Point",
+    "coordinates": [12.5663, 41.9028, 10.0]
+  }
+}
+```
+
+### GeoJSON Feature Fields
+
+<ResponseField name="type" type="string">
+  Always `"Feature"` for earthquake records
+</ResponseField>
+
+<ResponseField name="id" type="string">
+  Unique identifier for the earthquake event
+</ResponseField>
+
+<ResponseField name="properties" type="object">
+  Earthquake properties and metadata
+  
+  <Expandable title="key properties">
+    <ResponseField name="mag" type="number">
+      Earthquake magnitude (e.g., `4.5`)
+    </ResponseField>
+    
+    <ResponseField name="place" type="string">
+      Human-readable location description
+    </ResponseField>
+    
+    <ResponseField name="time" type="integer">
+      Unix timestamp in milliseconds when the earthquake occurred
+    </ResponseField>
+    
+    <ResponseField name="updated" type="integer">
+      Unix timestamp in milliseconds when the data was last updated
+    </ResponseField>
+    
+    <ResponseField name="url" type="string">
+      URL to detailed information on the INGV website
+    </ResponseField>
+    
+    <ResponseField name="status" type="string">
+      Event status: `"automatic"`, `"reviewed"`, or `"manual"`
+    </ResponseField>
+    
+    <ResponseField name="magType" type="string">
+      Magnitude type: `"ml"` (local magnitude), `"mw"` (moment magnitude), etc.
+    </ResponseField>
+    
+    <ResponseField name="type" type="string">
+      Event type, typically `"earthquake"`
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="geometry" type="object">
+  GeoJSON geometry object
+  
+  <Expandable title="properties">
+    <ResponseField name="type" type="string">
+      Always `"Point"` for earthquake locations
+    </ResponseField>
+    
+    <ResponseField name="coordinates" type="array">
+      Array of `[longitude, latitude, depth]`
+      
+      - **longitude:** Decimal degrees (e.g., `12.5663`)
+      - **latitude:** Decimal degrees (e.g., `41.9028`)
+      - **depth:** Depth in kilometers below sea level (e.g., `10.0`)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Complete Response Examples
+
+### Recent Earthquakes
+
+<CodeGroup>
+
+```json Response
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Earthquakes recent events",
+  "payload": [
+    {
+      "type": "Feature",
+      "id": "20260303_0000001",
+      "properties": {
+        "mag": 4.5,
+        "place": "10 km NE of Rome, Italy",
+        "time": 1709481234000,
+        "magType": "ml",
+        "type": "earthquake"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [12.5663, 41.9028, 10.0]
+      }
+    },
+    {
+      "type": "Feature",
+      "id": "20260303_0000002",
+      "properties": {
+        "mag": 3.2,
+        "place": "Central Italy",
+        "time": 1709481100000,
+        "magType": "ml",
+        "type": "earthquake"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [13.2, 42.8, 8.5]
+      }
+    }
+  ],
+  "totalEarthquakes": 1247,
+  "pagination": {
+    "page": 1,
+    "totalPages": 25,
+    "limit": 50,
+    "hasMore": true
+  },
+  "meta": {
+    "method": "GET",
+    "path": "/earthquakes/recent?limit=50",
+    "timestamp": "2026-03-03T10:30:45.123Z"
+  }
+}
+```
+
+```bash Request
+curl "https://api.terraquakeapi.com/earthquakes/recent?limit=50"
+```
+
+</CodeGroup>
+
+### Earthquakes by Magnitude
+
+<CodeGroup>
+
+```json Response
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Earthquakes filtered by magnitude",
+  "payload": [
+    {
+      "type": "Feature",
+      "id": "20260302_0000045",
+      "properties": {
+        "mag": 5.2,
+        "place": "Tyrrhenian Sea",
+        "time": 1709395200000,
+        "magType": "mw",
+        "type": "earthquake"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [14.5, 39.2, 15.0]
+      }
+    }
+  ],
+  "totalEarthquakes": 23,
+  "pagination": {
+    "page": 1,
+    "totalPages": 1,
+    "limit": 50,
+    "hasMore": false
+  },
+  "meta": {
+    "method": "GET",
+    "path": "/earthquakes/magnitude?mag=5.0",
+    "timestamp": "2026-03-03T10:30:45.123Z"
+  }
+}
+```
+
+```bash Request
+curl "https://api.terraquakeapi.com/earthquakes/magnitude?mag=5.0"
+```
+
+</CodeGroup>
+
+### Empty Results
+
+When no earthquakes match the query:
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Earthquakes filtered by magnitude",
+  "payload": [],
+  "totalEarthquakes": 0,
+  "pagination": {
+    "page": 1,
+    "totalPages": 0,
+    "limit": 50,
+    "hasMore": false
+  },
+  "meta": {
+    "method": "GET",
+    "path": "/earthquakes/magnitude?mag=9.0",
+    "timestamp": "2026-03-03T10:30:45.123Z"
+  }
+}
+```
+
+## Working with Timestamps
+
+All timestamps in the API are provided in different formats:
+
+### ISO 8601 Format (meta.timestamp)
+
+```json
+"timestamp": "2026-03-03T10:30:45.123Z"
+```
+
+<CodeGroup>
+
+```javascript JavaScript
+const timestamp = "2026-03-03T10:30:45.123Z";
+const date = new Date(timestamp);
+console.log(date.toLocaleString()); // "3/3/2026, 10:30:45 AM"
+```
+
+```python Python
+from datetime import datetime
+
+timestamp = "2026-03-03T10:30:45.123Z"
+date = datetime.fromisoformat(timestamp.replace('Z', '+00:00'))
+print(date.strftime('%Y-%m-%d %H:%M:%S'))  # "2026-03-03 10:30:45"
+```
+
+</CodeGroup>
+
+### Unix Timestamp in Milliseconds (properties.time)
+
+```json
+"time": 1709481234000
+```
+
+<CodeGroup>
+
+```javascript JavaScript
+const time = 1709481234000;
+const date = new Date(time);
+console.log(date.toISOString()); // "2026-03-03T10:33:54.000Z"
+```
+
+```python Python
+from datetime import datetime
+
+time = 1709481234000
+date = datetime.fromtimestamp(time / 1000)  # Convert to seconds
+print(date.strftime('%Y-%m-%d %H:%M:%S'))  # "2026-03-03 10:33:54"
+```
+
+</CodeGroup>
+
+## Filtering and Sorting Responses
+
+Some endpoints support additional query parameters to filter and sort results:
+
+### Sorting
+
+```bash
+# Sort by magnitude (descending)
+curl "https://api.terraquakeapi.com/earthquakes/recent?sort=-magnitude"
+
+# Sort by time (ascending)
+curl "https://api.terraquakeapi.com/earthquakes/recent?sort=time"
+
+# Multiple sort fields
+curl "https://api.terraquakeapi.com/earthquakes/recent?sort=-magnitude,time"
+```
+
+**Sortable fields:** `time`, `magnitude`, `depth`
+
+**Sort order:**
+- Prefix with `-` for descending (e.g., `-magnitude`)
+- No prefix for ascending (e.g., `time`)
+
+### Field Selection
+
+```bash
+# Request specific fields only
+curl "https://api.terraquakeapi.com/earthquakes/recent?fields=time,magnitude,place"
+```
+
+**Response with field selection:**
+
+```json
+{
+  "payload": [
+    {
+      "time": 1709481234000,
+      "magnitude": 4.5,
+      "place": "10 km NE of Rome, Italy"
+    }
+  ]
+}
+```
+
+**Available fields:** `time`, `magnitude`, `depth`, `place`, `coordinates`
+
+## Parsing Responses
+
+### JavaScript/TypeScript
+
+```typescript
+interface APIResponse {
+  success: boolean;
+  code: number;
+  status: string;
+  message: string;
+  payload: EarthquakeFeature[];
+  totalEarthquakes?: number;
+  pagination?: {
+    page: number;
+    totalPages: number;
+    limit: number;
+    hasMore: boolean;
+  };
+  meta: {
+    method: string;
+    path: string;
+    timestamp: string;
+  };
+}
+
+interface EarthquakeFeature {
+  type: 'Feature';
+  id: string;
+  properties: {
+    mag: number;
+    place: string;
+    time: number;
+    magType: string;
+    type: string;
+  };
+  geometry: {
+    type: 'Point';
+    coordinates: [number, number, number]; // [lon, lat, depth]
+  };
+}
+
+const response = await fetch('https://api.terraquakeapi.com/earthquakes/recent');
+const data: APIResponse = await response.json();
+
+// Access earthquake data
+data.payload.forEach(earthquake => {
+  const { mag, place, time } = earthquake.properties;
+  const [lon, lat, depth] = earthquake.geometry.coordinates;
+  
+  console.log(`M${mag} - ${place}`);
+  console.log(`Location: ${lat}, ${lon}`);
+  console.log(`Depth: ${depth} km`);
+  console.log(`Time: ${new Date(time).toISOString()}`);
+});
+```
+
+### Python
+
+```python
+import requests
+from typing import List, Dict, Any
+
+def get_earthquakes() -> Dict[str, Any]:
+    response = requests.get('https://api.terraquakeapi.com/earthquakes/recent')
+    return response.json()
+
+data = get_earthquakes()
+
+# Access earthquake data
+for earthquake in data['payload']:
+    props = earthquake['properties']
+    coords = earthquake['geometry']['coordinates']
+    
+    mag = props['mag']
+    place = props['place']
+    lon, lat, depth = coords
+    
+    print(f"M{mag} - {place}")
+    print(f"Location: {lat}, {lon}")
+    print(f"Depth: {depth} km")
+```
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Check Success Field" icon="check">
+    Always verify `success` is `true` before processing the payload.
+  </Card>
+  
+  <Card title="Use Pagination Metadata" icon="table">
+    Check `pagination.hasMore` to determine if more data exists.
+  </Card>
+  
+  <Card title="Parse Timestamps Correctly" icon="clock">
+    Convert `properties.time` from milliseconds and `meta.timestamp` from ISO 8601.
+  </Card>
+  
+  <Card title="Handle Empty Payloads" icon="list">
+    Check if `payload` is empty or `totalEarthquakes` is 0 before processing.
+  </Card>
+</CardGroup>
+
+## Common Questions
+
+<AccordionGroup>
+  <Accordion title="Why are coordinates in [longitude, latitude] order?">
+    This follows the GeoJSON specification, which uses `[longitude, latitude, altitude]` order (x, y, z). This differs from common "lat, lon" notation.
+  </Accordion>
+
+  <Accordion title="What timezone are timestamps in?">
+    All timestamps are in UTC. Convert to your local timezone as needed.
+  </Accordion>
+
+  <Accordion title="Can I request the response in a different format (XML, CSV)?">
+    Currently, the API only supports JSON responses following the GeoJSON standard for earthquake data.
+  </Accordion>
+
+  <Accordion title="What's the difference between 'code' and 'status'?">
+    - `code`: Numeric HTTP status code (e.g., `200`)
+    - `status`: Text representation (e.g., `"OK"`)
+    
+    Both convey the same information in different formats.
+  </Accordion>
+</AccordionGroup>

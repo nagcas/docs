@@ -1,0 +1,231 @@
+---
+title: 'Changelog'
+description: 'Track updates, improvements, and new features in TerraQuake API'
+icon: 'clock-rotate-left'
+---
+
+## Version 1.0.0 (Current)
+
+The current stable release of TerraQuake API.
+
+### Core Features
+
+<AccordionGroup>
+  <Accordion title="Earthquake Data Endpoints">
+    - **Recent earthquakes**: Query current year events with pagination
+    - **Today's earthquakes**: Get same-day seismic events
+    - **Last week**: 7-day historical data
+    - **Monthly queries**: Retrieve earthquakes by month and year
+    - **Location-based search**: Find earthquakes near coordinates with radius filtering
+    - **Region filtering**: Query by Italian region
+    - **Depth filtering**: Search by earthquake depth
+    - **Date range queries**: Custom time period searches
+    - **Magnitude filtering**: Filter events by minimum magnitude
+    - **Event details**: Get specific earthquake by event ID
+  </Accordion>
+  
+  <Accordion title="Seismic Station Network">
+    - **Station listing**: Access all INGV network stations
+    - **Station by code**: Query individual station details
+    - **GeoJSON format**: Station data in mapping-friendly format
+    - **Status filtering**: Filter by operational status (open/closed)
+    - **Network statistics**: Aggregated station network information
+  </Accordion>
+  
+  <Accordion title="API Infrastructure">
+    - **Pagination support**: All endpoints support page and limit parameters
+    - **GeoJSON responses**: Standard geographic data format
+    - **CORS enabled**: Cross-origin resource sharing for web apps
+    - **Rate limiting**: Fair usage policies implemented
+    - **Input validation**: Comprehensive request validation
+    - **Error handling**: Structured error responses
+    - **Security headers**: Helmet.js security middleware
+    - **XSS protection**: XSS-clean middleware
+    - **MongoDB sanitization**: NoSQL injection prevention
+  </Accordion>
+</AccordionGroup>
+
+### Documentation
+
+- Comprehensive API reference documentation
+- Interactive API testing interface
+- Code examples for multiple programming languages
+- Data source information and attribution
+
+### Technologies
+
+**Backend Stack:**
+- Node.js with Express.js
+- MongoDB with Mongoose ODM
+- JWT authentication (future-ready)
+- Passport.js for OAuth integration
+- Axios for INGV data fetching
+- XML2JS for station data parsing
+- Swagger/OpenAPI documentation
+
+**Security & Performance:**
+- Express rate limiting
+- Helmet.js security headers
+- HPP (HTTP Parameter Pollution) protection
+- Morgan-body request logging
+- Prometheus metrics client
+
+## Recent Updates
+
+### January 2026
+
+<Card title="API Documentation Routes" icon="file-lines">
+  Added TerraQuake API documentation routes and controller for better API discoverability
+</Card>
+
+### December 2025
+
+<Card title="User Management Improvements" icon="users">
+  - Enforced user role as 'user' in signUp for consistent permissions
+  - Updated user model to restrict role assignments
+  - Simplified contact routes with consistent endpoint paths
+</Card>
+
+<Card title="Frontend Enhancements" icon="browser">
+  - Added internationalization support for DocsEarthquakes component
+  - Updated translations for English, Spanish, and Italian
+  - Enhanced use cases section with improved descriptions
+</Card>
+
+### November 2025
+
+<Card title="Route Refactoring" icon="route">
+  - Unified testimonials API routes
+  - Simplified FAQ and post routes
+  - Updated endpoint paths for better consistency
+  - Improved JSON imports with type specification
+</Card>
+
+<Card title="Package Updates" icon="box">
+  - Updated nodemailer to version 7.0.9
+  - Adjusted license information for clarity
+</Card>
+
+## Roadmap
+
+### Planned Features
+
+<CardGroup cols={2}>
+  <Card title="MongoDB Persistence" icon="database">
+    Implement persistent data storage for enhanced performance and offline capabilities
+  </Card>
+  
+  <Card title="JWT Authentication" icon="key">
+    Secure API access with JWT-based authentication system
+  </Card>
+  
+  <Card title="Official SDKs" icon="code">
+    Release official client libraries for popular programming languages
+  </Card>
+  
+  <Card title="Advanced Filtering" icon="filter">
+    Enhanced query capabilities with complex filter combinations
+  </Card>
+  
+  <Card title="Webhook Support" icon="webhook">
+    Real-time notifications for earthquake events
+  </Card>
+  
+  <Card title="GraphQL API" icon="diagram-project">
+    Alternative GraphQL interface for flexible data queries
+  </Card>
+  
+  <Card title="Historical Archive" icon="clock-rotate-left">
+    Extended access to multi-year historical seismic data
+  </Card>
+  
+  <Card title="Data Export" icon="download">
+    Export earthquake data in multiple formats (CSV, KML, Shapefile)
+  </Card>
+</CardGroup>
+
+### Frontend Roadmap
+
+- Interactive mapping with Leaflet integration
+- Real-time earthquake notifications
+- Statistical charts with Chart.js
+- Educational content about earthquakes
+- Seismic zone visualization
+- Mobile-responsive design improvements
+- PWA (Progressive Web App) support
+
+## Breaking Changes
+
+<Warning>
+  **Version 1.0.0** is the initial stable release. No breaking changes have been introduced yet.
+  
+  Future major version updates will be documented here with migration guides.
+</Warning>
+
+## Migration Guides
+
+No migrations required for the current version.
+
+## Deprecation Notices
+
+No deprecated features in the current version.
+
+## GitHub Releases
+
+<Card title="View All Releases" icon="github" href="https://github.com/nagcas/TerraQuakeApi/releases">
+  See detailed release notes and download source code from GitHub
+</Card>
+
+## Commit History
+
+Recent development activity:
+
+```bash Recent Commits
+5bca8e7 Merge pull request #468 from nagcas/feature/nagcas
+bede730 fix: update API Docs link in README for accurate reference
+fea691b feat: add TerraQuake API documentation routes and controller
+fa3a6ae Merge pull request #465 from nagcas/feature/nagcas
+8231db3 feat: update nodemailer version to 7.0.9 and adjust license information
+df8549f feat: enforce user role as 'user' in signUp and update user model
+b1b88be feat: simplify contact routes by updating endpoint paths for consistency
+e076bbd feat: update JSON imports in i18n and data components to include type specification
+9d6d166 feat: unify testimonials API routes and update translations for community feedback
+0ef0814 feat: simplify user routes by updating endpoint paths for consistency
+```
+
+<Card title="Full Commit History" icon="code-commit" href="https://github.com/nagcas/TerraQuakeApi/commits/main">
+  View complete development history on GitHub
+</Card>
+
+## Stay Updated
+
+<CardGroup cols={2}>
+  <Card title="Watch on GitHub" icon="star" href="https://github.com/nagcas/TerraQuakeApi">
+    Star and watch the repository for updates
+  </Card>
+  
+  <Card title="Join Discord" icon="discord" href="https://discord.gg/RDBp8KJB">
+    Get announcements in the community Discord server
+  </Card>
+  
+  <Card title="Follow Development" icon="github" href="https://github.com/nagcas/TerraQuakeApi/issues">
+    Track upcoming features and bug fixes
+  </Card>
+  
+  <Card title="RSS Feed" icon="rss" href="https://github.com/nagcas/TerraQuakeApi/releases.atom">
+    Subscribe to release notifications
+  </Card>
+</CardGroup>
+
+## Contributing to Releases
+
+Interested in contributing to upcoming releases?
+
+- Check the [Contributing Guide](/resources/contributing) for how to get started
+- Look for issues labeled `good first issue` on [GitHub](https://github.com/nagcas/TerraQuakeApi/issues)
+- Join discussions about upcoming features in [Discord](https://discord.gg/RDBp8KJB)
+- Participate in [Hacktoberfest 2025](https://hacktoberfest.com/) with TerraQuake API
+
+<Note>
+  This project follows [Semantic Versioning](https://semver.org/). Version numbers follow the format MAJOR.MINOR.PATCH.
+</Note>

@@ -1,0 +1,259 @@
+---
+title: Get Earthquake by Event ID
+description: Retrieve detailed information for a specific earthquake using its unique identifier
+---
+
+Fetches complete details for a single earthquake event using its unique event identifier. This endpoint is ideal for retrieving full details about a specific event and deep-dive analysis.
+
+## Endpoint
+
+**Method:** GET  
+**Path:** `/v1/earthquakes/eventId`  
+**Authentication:** Not required
+
+## Parameters
+
+<ParamField query="eventId" type="integer" required>
+  Unique earthquake event identifier.
+  
+  **Validation:**
+  - Must be a valid integer
+  - Must exist in the current year's earthquake database
+  - Returns 404 error if not found: "No event found with ID {eventId}"
+</ParamField>
+
+## Request Example
+
+<CodeGroup>
+```bash cURL
+curl "https://api.terraquakeapi.com/v1/earthquakes/eventId?eventId=44278572"
+```
+
+```javascript JavaScript
+const eventId = 44278572;
+const response = await fetch(
+  `https://api.terraquakeapi.com/v1/earthquakes/eventId?eventId=${eventId}`
+);
+const data = await response.json();
+
+if (data.success) {
+  const quake = data.payload[0];
+  const { eventId, mag, place, time, author } = quake.properties;
+  const [lon, lat, depth] = quake.geometry.coordinates;
+  
+  console.log(`Event ID: ${eventId}`);
+  console.log(`Magnitude: ${mag}`);
+  console.log(`Location: ${place}`);
+  console.log(`Coordinates: [${lat}, ${lon}]`);
+  console.log(`Depth: ${depth} km`);
+  console.log(`Time: ${time}`);
+  console.log(`Author: ${author}`);
+} else {
+  console.error('Event not found');
+}
+```
+
+```python Python
+import requests
+
+event_id = 44278572
+response = requests.get(
+    'https://api.terraquakeapi.com/v1/earthquakes/eventId',
+    params={'eventId': event_id}
+)
+data = response.json()
+
+if data.get('success'):
+    quake = data['payload'][0]
+    props = quake['properties']
+    lon, lat, depth = quake['geometry']['coordinates']
+    
+    print(f"Event ID: {props['eventId']}")
+    print(f"Magnitude: {props['mag']}")
+    print(f"Location: {props['place']}")
+    print(f"Coordinates: [{lat}, {lon}]")
+    print(f"Depth: {depth} km")
+    print(f"Time: {props['time']}")
+    print(f"Author: {props['author']}")
+else:
+    print('Event not found')
+```
+</CodeGroup>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="code" type="integer">
+  HTTP status code (200 for success, 404 if not found)
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  HTTP status message ("OK" for success, "Not Found" if event doesn't exist)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable message. Format: "Earthquakes event with id {eventId}"
+</ResponseField>
+
+<ResponseField name="payload" type="array">
+  Array containing a single GeoJSON Feature object with complete earthquake details:
+  
+  **Properties:**
+  - `eventId` (integer) - Unique event identifier (matches query parameter)
+  - `originId` (integer) - Origin identifier from INGV
+  - `time` (string) - ISO 8601 timestamp of earthquake occurrence
+  - `author` (string) - Reporting agency/organization
+  - `magType` (string) - Magnitude type (ML, Mw, Mb, Ms)
+  - `mag` (float) - Magnitude value
+  - `magAuthor` (string) - Magnitude determination author
+  - `type` (string) - Event type ("earthquake")
+  - `place` (string) - Human-readable location description
+  - `version` (integer) - Event data version number
+  - `geojson_creationTime` (string) - GeoJSON creation timestamp
+  
+  **Geometry:**
+  - `type` (string) - Always "Point"
+  - `coordinates` (array) - [longitude, latitude, depth in km]
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Request metadata containing method, path, and timestamp
+</ResponseField>
+
+## Response Example
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Earthquakes event with id 44278572",
+  "payload": [
+    {
+      "type": "Feature",
+      "properties": {
+        "eventId": 44278572,
+        "originId": 140102761,
+        "time": "2025-09-26T19:33:46.440000",
+        "author": "SURVEY-INGV",
+        "magType": "ML",
+        "mag": 1,
+        "magAuthor": "--",
+        "type": "earthquake",
+        "place": "Costa Calabra sud-orientale (Reggio di Calabria)",
+        "version": 100,
+        "geojson_creationTime": "2025-11-06T00:52:30"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [16.2387, 37.9982, 10.5]
+      }
+    }
+  ],
+  "meta": {
+    "method": "GET",
+    "path": "/v1/earthquakes/eventId?eventId=44278572",
+    "timestamp": "2025-11-06T00:52:31.974Z"
+  }
+}
+```
+
+## Error Responses
+
+### Event Not Found
+
+```json
+{
+  "success": false,
+  "code": 404,
+  "status": "Not Found",
+  "message": "No event found with ID 44278572"
+}
+```
+
+## Implementation Details
+
+- **Search Scope:** Searches events from start of current year to today
+- **Filter Logic:** `feature.properties.eventId === parseInt(eventId)`
+- **Return Format:** Single-item array in payload (maintains consistency with other endpoints)
+- **Event ID Type:** Converted to integer for comparison
+- **Data Source:** INGV API with `format=geojson`
+- **Metrics:** Increments event counter by 1 when found
+
+## Use Cases
+
+- Retrieve complete details for a specific earthquake
+- Deep-dive analysis of individual seismic events
+- Event tracking and monitoring
+- Reference lookups from other systems
+- Event detail pages in applications
+- Historical event research
+
+## How to Find Event IDs
+
+Event IDs can be obtained from:
+
+1. Other API endpoints (all return `eventId` in response)
+2. INGV official reports and bulletins
+3. Seismic monitoring dashboards
+4. Previous API queries
+
+## Example: Get Event Details and Related Events
+
+```javascript
+// Step 1: Get specific event details
+const eventResponse = await fetch(
+  'https://api.terraquakeapi.com/v1/earthquakes/eventId?eventId=44278572'
+);
+const eventData = await eventResponse.json();
+
+if (eventData.success) {
+  const event = eventData.payload[0];
+  const [lon, lat] = event.geometry.coordinates;
+  
+  // Step 2: Find nearby earthquakes using location endpoint
+  const nearbyResponse = await fetch(
+    `https://api.terraquakeapi.com/v1/earthquakes/location?` +
+    `latitude=${lat}&longitude=${lon}&radius=50`
+  );
+  const nearbyData = await nearbyResponse.json();
+  
+  console.log(`Found ${nearbyData.totalEarthquakes} earthquakes within 50km`);
+}
+```
+
+## Field Descriptions
+
+### Event Properties
+
+- **eventId**: Unique identifier assigned by INGV
+- **originId**: Origin/source identifier for event determination
+- **time**: Exact timestamp when earthquake occurred (UTC)
+- **author**: Agency that determined event parameters (e.g., "SURVEY-INGV")
+- **magType**: Type of magnitude scale used:
+  - ML: Local Magnitude (Richter)
+  - Mw: Moment Magnitude
+  - Mb: Body Wave Magnitude
+  - Ms: Surface Wave Magnitude
+- **mag**: Magnitude value on specified scale
+- **magAuthor**: Agency/system that calculated magnitude
+- **type**: Event classification (typically "earthquake")
+- **place**: Human-readable location description
+- **version**: Data revision version number
+- **geojson_creationTime**: When GeoJSON was generated
+
+### Geometry
+
+- **coordinates[0]**: Longitude (East-West position, -180 to 180)
+- **coordinates[1]**: Latitude (North-South position, -90 to 90)
+- **coordinates[2]**: Depth below surface in kilometers
+
+## Related Endpoints
+
+- [By Location](/api/earthquakes/by-location) - Find nearby earthquakes
+- [Recent Earthquakes](/api/earthquakes/recent) - Browse all recent events
+- [By Magnitude](/api/earthquakes/by-magnitude) - Find similar magnitude events
+- [By Region](/api/earthquakes/by-region) - Find events in same region

@@ -1,0 +1,167 @@
+---
+title: "Stations API Overview"
+description: "Access INGV seismic monitoring stations across Italy"
+---
+
+## Introduction
+
+The TerraQuake Stations API provides comprehensive access to the INGV (Istituto Nazionale di Geofisica e Vulcanologia) seismic monitoring network. Query active and historical seismic stations, retrieve their locations in GeoJSON format for mapping, and access network statistics.
+
+## INGV Seismic Network
+
+The INGV operates one of the most advanced seismic monitoring networks in the Mediterranean region, with hundreds of stations distributed across Italy. These stations continuously monitor seismic activity, providing critical data for earthquake detection, early warning systems, and scientific research.
+
+### Station Data Includes:
+
+- **Location**: Precise latitude, longitude, and elevation
+- **Metadata**: Station code, name, site information
+- **Status**: Operational state (open/closed/inactive)
+- **Network**: Network affiliation and creation dates
+- **Channels**: Available sensor channels and types
+
+## Available Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Get All Stations" icon="list" href="/api/stations/get-all">
+    Retrieve all seismic monitoring stations with pagination
+  </Card>
+  
+  <Card title="Get Station by Code" icon="magnifying-glass" href="/api/stations/by-code">
+    Search for a specific station using its unique code
+  </Card>
+  
+  <Card title="GeoJSON Format" icon="map" href="/api/stations/geojson">
+    Get stations in GeoJSON format for mapping applications
+  </Card>
+  
+  <Card title="Active Stations" icon="circle-check" href="/api/stations/status-open">
+    List all currently operational stations
+  </Card>
+  
+  <Card title="Closed Stations" icon="circle-xmark" href="/api/stations/status-closed">
+    Retrieve historical/inactive stations
+  </Card>
+  
+  <Card title="Statistics" icon="chart-simple" href="/api/stations/statistics">
+    Get network statistics and aggregate metrics
+  </Card>
+</CardGroup>
+
+## Common Use Cases
+
+### 1. Interactive Mapping
+
+Use the `/stations/geojson` endpoint to display seismic stations on interactive maps:
+
+```javascript
+const response = await fetch('https://api.terraquakeapi.com/stations/geojson');
+const data = await response.json();
+
+// Add to Mapbox, Leaflet, or other mapping library
+map.addSource('stations', {
+  type: 'geojson',
+  data: data.payload
+});
+```
+
+### 2. Network Monitoring
+
+Monitor the operational status of the seismic network:
+
+```python
+import requests
+
+# Get statistics
+response = requests.get('https://api.terraquakeapi.com/stations/statistics')
+stats = response.json()['payload']['statistics']
+
+print(f"Total stations: {stats['totalStations']}")
+print(f"Active: {stats['stationsOpen']}")
+print(f"Inactive: {stats['stationsClosed']}")
+```
+
+### 3. Station Lookup
+
+Retrieve detailed information for a specific station:
+
+```bash
+curl "https://api.terraquakeapi.com/stations/code?code=ACATE"
+```
+
+### 4. Regional Analysis
+
+Filter active stations for specific regions or applications:
+
+```javascript
+// Get all active stations
+const activeStations = await fetch(
+  'https://api.terraquakeapi.com/stations/status/open?limit=500'
+);
+
+// Filter by location, network, or other criteria
+const filtered = activeStations.payload.filter(
+  station => station.Latitude > 40 && station.Latitude < 45
+);
+```
+
+## Base URL
+
+All station endpoints use the base URL:
+
+```
+https://api.terraquakeapi.com/stations
+```
+
+## Authentication
+
+No authentication required. All endpoints are publicly accessible.
+
+## Rate Limits
+
+- **Limit**: 100 requests per minute per IP
+- **Window**: 1 minute (fixed window)
+- **Headers**: `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`
+
+See [Rate Limiting](/concepts/rate-limiting) for details.
+
+## Response Format
+
+All endpoints return standardized JSON responses:
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Descriptive message",
+  "payload": [...],
+  "meta": {
+    "method": "GET",
+    "path": "/stations",
+    "timestamp": "2025-11-06T00:40:01.490Z"
+  },
+  "totalStations": 450,
+  "pagination": {
+    "page": 1,
+    "totalPages": 9,
+    "limit": 50,
+    "hasMore": true
+  }
+}
+```
+
+## Data Source
+
+Station data is sourced from the INGV FDSN (International Federation of Digital Seismograph Networks) Station service, which provides standardized access to seismic station metadata in XML format (converted to JSON by the API).
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Get All Stations" icon="list" href="/api/stations/get-all">
+    Start with retrieving all available stations
+  </Card>
+  
+  <Card title="GeoJSON Format" icon="map" href="/api/stations/geojson">
+    Build a station map with GeoJSON data
+  </Card>
+</CardGroup>

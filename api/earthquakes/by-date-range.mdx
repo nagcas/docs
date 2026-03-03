@@ -1,0 +1,323 @@
+---
+title: Get Earthquakes by Date Range
+description: Retrieve earthquake events within a custom date range with optional filters
+---
+
+Fetches earthquake events within a specified date range (inclusive) with optional magnitude and depth filters. This endpoint is ideal for custom reports and specific incident investigations.
+
+## Endpoint
+
+**Method:** GET  
+**Path:** `/v1/earthquakes/range-time`  
+**Authentication:** Not required
+
+## Parameters
+
+<ParamField query="startdate" type="string" required>
+  Start date in ISO format (YYYY-MM-DD).
+  
+  **Validation:**
+  - Must match format `YYYY-MM-DD` (e.g., "2024-01-01")
+  - Must be earlier than or equal to `enddate`
+  - Returns 400 error if missing: "Both 'startdate' and 'enddate' parameters are required. Example: ?startdate=2024-01-01&enddate=2024-01-31"
+  - Returns 400 error if invalid format: "Invalid date format. Use ISO format: YYYY-MM-DD. Example: ?startdate=2024-01-01"
+</ParamField>
+
+<ParamField query="enddate" type="string" required>
+  End date in ISO format (YYYY-MM-DD).
+  
+  **Validation:**
+  - Must match format `YYYY-MM-DD`
+  - Must be equal to or after `startdate`
+  - Returns 400 error if `startdate > enddate`: "'startdate' must be earlier than or equal to 'enddate'."
+</ParamField>
+
+<ParamField query="minmag" type="number">
+  Minimum magnitude filter (optional).
+  
+  **Validation:**
+  - Must be a positive number if provided
+  - Returns 400 error if invalid: "'minmag' must be a positive number."
+</ParamField>
+
+<ParamField query="maxdepth" type="number">
+  Maximum depth filter in kilometers (optional).
+  
+  **Validation:**
+  - Must be a positive number if provided
+  - Returns 400 error if invalid: "'maxdepth' must be a positive number."
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number for pagination. Must be a positive integer greater than 0.
+  
+  **Validation:**
+  - Must be > 0
+  - Returns 400 error if invalid
+</ParamField>
+
+<ParamField query="limit" type="integer" default="50">
+  Number of results per page. Must be a positive integer greater than 0.
+  
+  **Validation:**
+  - Must be > 0
+  - Returns 400 error if invalid
+</ParamField>
+
+<ParamField query="sort" type="string" default="-time">
+  Sort order for results. Prefix with `-` for descending order.
+  
+  **Allowed values:**
+  - `time` or `-time` (default: descending)
+  - `magnitude` or `-magnitude`
+  - `depth` or `-depth`
+</ParamField>
+
+<ParamField query="fields" type="string">
+  Comma-separated list of fields to include in response.
+  
+  **Allowed values:**
+  - `time`
+  - `magnitude`
+  - `depth`
+  - `place`
+  - `coordinates`
+</ParamField>
+
+## Request Example
+
+<CodeGroup>
+```bash cURL
+# Basic date range
+curl "https://api.terraquakeapi.com/v1/earthquakes/range-time?startdate=2025-09-01&enddate=2025-09-30"
+
+# With magnitude filter
+curl "https://api.terraquakeapi.com/v1/earthquakes/range-time?startdate=2025-09-01&enddate=2025-09-30&minmag=3.0"
+
+# With magnitude and depth filters
+curl "https://api.terraquakeapi.com/v1/earthquakes/range-time?startdate=2025-09-01&enddate=2025-09-30&minmag=3.0&maxdepth=50"
+```
+
+```javascript JavaScript
+// Basic date range query
+const response = await fetch(
+  'https://api.terraquakeapi.com/v1/earthquakes/range-time?' +
+  new URLSearchParams({
+    startdate: '2025-09-01',
+    enddate: '2025-09-30',
+    limit: 100
+  })
+);
+const data = await response.json();
+
+if (data.success) {
+  console.log(`Total earthquakes: ${data.totalEarthquakes}`);
+  console.log(`Message: ${data.message}`);
+  data.payload.forEach(quake => {
+    const { mag, place, time } = quake.properties;
+    const depth = quake.geometry.coordinates[2];
+    console.log(`${mag} - ${place} at ${time} (${depth}km deep)`);
+  });
+}
+
+// With filters
+const filteredResponse = await fetch(
+  'https://api.terraquakeapi.com/v1/earthquakes/range-time?' +
+  new URLSearchParams({
+    startdate: '2025-09-01',
+    enddate: '2025-09-30',
+    minmag: '3.0',
+    maxdepth: '50',
+    limit: 50
+  })
+);
+```
+
+```python Python
+import requests
+
+# Basic date range query
+response = requests.get(
+    'https://api.terraquakeapi.com/v1/earthquakes/range-time',
+    params={
+        'startdate': '2025-09-01',
+        'enddate': '2025-09-30',
+        'limit': 100
+    }
+)
+data = response.json()
+
+if data.get('success'):
+    print(f"Total earthquakes: {data.get('totalEarthquakes')}")
+    print(f"Message: {data.get('message')}")
+    for quake in data.get('payload', []):
+        props = quake['properties']
+        depth = quake['geometry']['coordinates'][2]
+        print(f"{props['mag']} - {props['place']} at {props['time']} ({depth}km deep)")
+
+# With filters
+filtered_response = requests.get(
+    'https://api.terraquakeapi.com/v1/earthquakes/range-time',
+    params={
+        'startdate': '2025-09-01',
+        'enddate': '2025-09-30',
+        'minmag': 3.0,
+        'maxdepth': 50,
+        'limit': 50
+    }
+)
+```
+</CodeGroup>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="code" type="integer">
+  HTTP status code (200 for success)
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  HTTP status message ("OK" for success)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable message including date range and applied filters. Format: "Earthquake events between {startdate} and {enddate}[ with magnitude ≥ {minmag}][ and depth ≤ {maxdepth} km]"
+</ResponseField>
+
+<ResponseField name="payload" type="array">
+  Array of GeoJSON Feature objects containing earthquake data
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Request metadata containing method, path, and timestamp
+</ResponseField>
+
+<ResponseField name="totalEarthquakes" type="integer">
+  Total count of earthquakes matching the query (after filters applied)
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination details with page, limit, totalPages, and hasMore
+</ResponseField>
+
+## Response Example
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Earthquake events between 2025-09-01 and 2025-09-30 with magnitude ≥ 3 and depth ≤ 50 km",
+  "payload": [
+    {
+      "type": "Feature",
+      "properties": {
+        "eventId": 44278572,
+        "originId": 140102761,
+        "time": "2025-09-26T19:33:46.440000",
+        "author": "SURVEY-INGV",
+        "magType": "ML",
+        "mag": 3.2,
+        "magAuthor": "--",
+        "type": "earthquake",
+        "place": "Costa Calabra sud-orientale (Reggio di Calabria)",
+        "version": 100,
+        "geojson_creationTime": "2025-11-06T00:52:30"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [16.2387, 37.9982, 10.5]
+      }
+    }
+  ],
+  "meta": {
+    "method": "GET",
+    "path": "/v1/earthquakes/range-time?startdate=2025-09-01&enddate=2025-09-30&minmag=3&maxdepth=50&limit=50",
+    "timestamp": "2025-11-06T01:00:00.000Z"
+  },
+  "totalEarthquakes": 42,
+  "pagination": {
+    "page": 1,
+    "limit": 50,
+    "totalPages": 1,
+    "hasMore": false
+  }
+}
+```
+
+## Error Responses
+
+### Missing Required Parameters
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "Both 'startdate' and 'enddate' parameters are required. Example: ?startdate=2024-01-01&enddate=2024-01-31"
+}
+```
+
+### Invalid Date Format
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "Invalid date format. Use ISO format: YYYY-MM-DD. Example: ?startdate=2024-01-01"
+}
+```
+
+### Invalid Date Range
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "'startdate' must be earlier than or equal to 'enddate'."
+}
+```
+
+### Invalid Filter Values
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "'minmag' must be a positive number."
+}
+```
+
+## Implementation Details
+
+- **Date Validation:** Uses regex `/^\d{4}-\d{2}-\d{2}$/` to validate ISO format
+- **Date Comparison:** Converts to Date objects to ensure startdate ≤ enddate
+- **Filter Application:** 
+  - `minmag`: Filters features where `feature.properties.mag >= magValue`
+  - `maxdepth`: Filters features where `feature.properties.depth <= depthValue`
+- **Filter Order:** Filters applied after fetching all events from INGV
+- **Pagination:** Applied after filtering (counts filtered results)
+- **Sorting:** Default sort is by time (most recent first: `-time`)
+- **Data Source:** INGV API with `orderby=time` and `format=geojson`
+
+## Use Cases
+
+- Custom time-based reports
+- Incident investigations
+- Research studies requiring specific date ranges
+- Analyzing seismic activity during specific events
+- Filtering significant earthquakes by magnitude and depth
+
+## Related Endpoints
+
+- [By Month](/api/earthquakes/by-month) - Specific month and year
+- [Recent Earthquakes](/api/earthquakes/recent) - Year-to-date events
+- [Last Week](/api/earthquakes/last-week) - Last 7 days
+- [By Magnitude](/api/earthquakes/by-magnitude) - Filter by magnitude only
+- [By Depth](/api/earthquakes/by-depth) - Filter by depth only

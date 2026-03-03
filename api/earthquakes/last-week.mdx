@@ -1,0 +1,215 @@
+---
+title: Get Last Week's Earthquakes
+description: Retrieve all earthquake events from the last 7 days
+---
+
+Fetches all earthquake events that occurred in the last 7 days, including today. This endpoint is ideal for weekly summaries and trend analysis.
+
+## Endpoint
+
+**Method:** GET  
+**Path:** `/v1/earthquakes/last-week`  
+**Authentication:** Not required
+
+## Parameters
+
+<ParamField query="page" type="integer" default="1">
+  Page number for pagination. Must be a positive integer greater than 0.
+  
+  **Validation:**
+  - Must be > 0
+  - Returns 400 error: "The 'page' parameter must be a positive integer (e.g., ?page=2)."
+</ParamField>
+
+<ParamField query="limit" type="integer" default="50">
+  Number of results per page. Must be a positive integer greater than 0.
+  
+  **Validation:**
+  - Must be > 0
+  - Returns 400 error: "The 'limit' parameter must be a positive integer greater than 0. Example: ?limit=50"
+</ParamField>
+
+<ParamField query="sort" type="string" default="-time">
+  Sort order for results. Prefix with `-` for descending order.
+  
+  **Allowed values:**
+  - `time` or `-time` (default: descending)
+  - `magnitude` or `-magnitude`
+  - `depth` or `-depth`
+</ParamField>
+
+<ParamField query="fields" type="string">
+  Comma-separated list of fields to include in response.
+  
+  **Allowed values:**
+  - `time`
+  - `magnitude`
+  - `depth`
+  - `place`
+  - `coordinates`
+</ParamField>
+
+## Request Example
+
+<CodeGroup>
+```bash cURL
+curl "https://api.terraquakeapi.com/v1/earthquakes/last-week?limit=200"
+```
+
+```javascript JavaScript
+const response = await fetch(
+  'https://api.terraquakeapi.com/v1/earthquakes/last-week?limit=200'
+);
+const data = await response.json();
+
+if (data.success) {
+  console.log(`Earthquakes in last 7 days: ${data.totalEarthquakes}`);
+  console.log(`Date range: ${data.message}`);
+  data.payload.forEach(quake => {
+    const { mag, place, time } = quake.properties;
+    console.log(`${mag} - ${place} at ${time}`);
+  });
+}
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'https://api.terraquakeapi.com/v1/earthquakes/last-week',
+    params={'limit': 200}
+)
+data = response.json()
+
+if data.get('success'):
+    print(f"Earthquakes in last 7 days: {data.get('totalEarthquakes')}")
+    print(f"Date range: {data.get('message')}")
+    for quake in data.get('payload', []):
+        props = quake['properties']
+        print(f"{props['mag']} - {props['place']} at {props['time']}")
+```
+</CodeGroup>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="code" type="integer">
+  HTTP status code (200 for success)
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  HTTP status message ("OK" for success)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable message including date range. Format: "Earthquake events from the last 7 days ({startDate} to {endDate})"
+</ResponseField>
+
+<ResponseField name="payload" type="array">
+  Array of GeoJSON Feature objects containing earthquake data
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Request metadata containing method, path, and timestamp
+</ResponseField>
+
+<ResponseField name="totalEarthquakes" type="integer">
+  Total count of earthquakes in the last 7 days
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination details with page, totalPages, limit, and hasMore
+</ResponseField>
+
+## Response Example
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Earthquake events from the last 7 days (2025-10-30 to 2025-11-06)",
+  "payload": [
+    {
+      "type": "Feature",
+      "properties": {
+        "eventId": 44604942,
+        "originId": 141077201,
+        "time": "2025-11-05T23:31:48.030000",
+        "author": "SURVEY-INGV-CT#KATALOC",
+        "magType": "ML",
+        "mag": 2.1,
+        "magAuthor": "--",
+        "type": "earthquake",
+        "place": "13 km SE Maletto (CT)",
+        "version": 100,
+        "geojson_creationTime": "2025-11-06T00:40:00"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [14.97, 37.751, 5.5]
+      }
+    }
+  ],
+  "meta": {
+    "method": "GET",
+    "path": "/v1/earthquakes/last-week?limit=200",
+    "timestamp": "2025-11-06T00:51:33.850Z"
+  },
+  "totalEarthquakes": 487,
+  "pagination": {
+    "page": 1,
+    "totalPages": 3,
+    "limit": 200,
+    "hasMore": true
+  }
+}
+```
+
+## Error Responses
+
+### Invalid Limit Parameter
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The 'limit' parameter must be a positive integer greater than 0. Example: ?limit=50"
+}
+```
+
+### Invalid Page Parameter
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The 'page' parameter must be a positive integer (e.g., ?page=2)."
+}
+```
+
+## Implementation Details
+
+- **Date Calculation:** `today.getDate() - 7` to get start date
+- **Date Range:** Last 7 days including today (e.g., Oct 30 to Nov 6)
+- **Sorting:** Default sort is by time (most recent first: `-time`)
+- **Pagination:** Manual pagination applied after fetching all events from INGV
+- **Data Source:** INGV API with `orderby=time` and `format=geojson`
+
+## Use Cases
+
+- Weekly seismic activity reports
+- Trend analysis and pattern detection
+- Weekly email digests or newsletters
+- Comparing recent activity to historical data
+
+## Related Endpoints
+
+- [Today's Earthquakes](/api/earthquakes/today) - Only today's events
+- [Recent Earthquakes](/api/earthquakes/recent) - Year-to-date events
+- [By Date Range](/api/earthquakes/by-date-range) - Custom date range

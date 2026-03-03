@@ -1,0 +1,304 @@
+---
+title: Get Earthquakes by Magnitude
+description: Retrieve earthquake events filtered by minimum magnitude threshold
+---
+
+Fetches earthquake events with magnitude greater than a specified value. This endpoint is ideal for filtering significant earthquakes and analyzing major seismic events.
+
+## Endpoint
+
+**Method:** GET  
+**Path:** `/v1/earthquakes/magnitude`  
+**Authentication:** Not required
+
+## Parameters
+
+<ParamField query="mag" type="number" required>
+  Minimum magnitude threshold. Returns earthquakes with magnitude > this value.
+  
+  **Validation:**
+  - Must be a positive number > 0
+  - Returns 400 error if missing: "The 'mag' parameter is required and must be a positive number greater than 0."
+  - Returns 400 error if invalid: "The 'mag' parameter must be a positive number greater than 0."
+</ParamField>
+
+<ParamField query="page" type="integer" default="1">
+  Page number for pagination. Must be a positive integer greater than 0.
+  
+  **Validation:**
+  - Must be > 0
+  - Returns 400 error if invalid
+</ParamField>
+
+<ParamField query="limit" type="integer" default="50">
+  Number of results per page. Must be a positive integer greater than 0.
+  
+  **Validation:**
+  - Must be > 0
+  - Returns 400 error if invalid
+</ParamField>
+
+<ParamField query="sort" type="string" default="-time">
+  Sort order for results. Prefix with `-` for descending order.
+  
+  **Allowed values:**
+  - `time` or `-time` (default: descending)
+  - `magnitude` or `-magnitude`
+  - `depth` or `-depth`
+</ParamField>
+
+<ParamField query="fields" type="string">
+  Comma-separated list of fields to include in response.
+  
+  **Allowed values:**
+  - `time`
+  - `magnitude`
+  - `depth`
+  - `place`
+  - `coordinates`
+</ParamField>
+
+## Request Example
+
+<CodeGroup>
+```bash cURL
+# Major earthquakes (magnitude > 5.0)
+curl "https://api.terraquakeapi.com/v1/earthquakes/magnitude?mag=5.0&limit=100"
+
+# Light earthquakes (magnitude > 4.0)
+curl "https://api.terraquakeapi.com/v1/earthquakes/magnitude?mag=4.0"
+
+# Minor earthquakes (magnitude > 2.0)
+curl "https://api.terraquakeapi.com/v1/earthquakes/magnitude?mag=2.0&limit=200"
+```
+
+```javascript JavaScript
+// Get major earthquakes (magnitude > 5.0)
+const response = await fetch(
+  'https://api.terraquakeapi.com/v1/earthquakes/magnitude?' +
+  new URLSearchParams({
+    mag: 5.0,
+    limit: 100
+  })
+);
+const data = await response.json();
+
+if (data.success) {
+  console.log(`Total earthquakes with magnitude > 5.0: ${data.totalEarthquakes}`);
+  console.log(`Message: ${data.message}`);
+  data.payload.forEach(quake => {
+    const { mag, place, time } = quake.properties;
+    console.log(`Magnitude ${mag} - ${place} at ${time}`);
+  });
+}
+```
+
+```python Python
+import requests
+
+# Get major earthquakes (magnitude > 5.0)
+response = requests.get(
+    'https://api.terraquakeapi.com/v1/earthquakes/magnitude',
+    params={'mag': 5.0, 'limit': 100}
+)
+data = response.json()
+
+if data.get('success'):
+    print(f"Total earthquakes with magnitude > 5.0: {data.get('totalEarthquakes')}")
+    print(f"Message: {data.get('message')}")
+    for quake in data.get('payload', []):
+        props = quake['properties']
+        print(f"Magnitude {props['mag']} - {props['place']} at {props['time']}")
+```
+</CodeGroup>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="code" type="integer">
+  HTTP status code (200 for success)
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  HTTP status message ("OK" for success)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable message. Format: "Earthquake events with magnitude > {magValue}"
+</ResponseField>
+
+<ResponseField name="payload" type="array">
+  Array of GeoJSON Feature objects. Magnitude is stored in `properties.mag`
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Request metadata containing method, path, and timestamp
+</ResponseField>
+
+<ResponseField name="totalEarthquakes" type="integer">
+  Total count of earthquakes with magnitude greater than specified value
+</ResponseField>
+
+<ResponseField name="pagination" type="object">
+  Pagination details with page, limit, totalPages, and hasMore
+</ResponseField>
+
+## Response Example
+
+```json
+{
+  "success": true,
+  "code": 200,
+  "status": "OK",
+  "message": "Earthquake events with magnitude > 5.0",
+  "payload": [
+    {
+      "type": "Feature",
+      "properties": {
+        "eventId": 44604942,
+        "originId": 141077201,
+        "time": "2025-11-05T23:31:48.030000",
+        "author": "SURVEY-INGV-CT#KATALOC",
+        "magType": "ML",
+        "mag": 5.2,
+        "magAuthor": "--",
+        "type": "earthquake",
+        "place": "13 km SE Maletto (CT)",
+        "version": 100,
+        "geojson_creationTime": "2025-11-06T00:40:00"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [14.97, 37.751, 5.5]
+      }
+    }
+  ],
+  "meta": {
+    "method": "GET",
+    "path": "/v1/earthquakes/magnitude?mag=5.0&limit=100",
+    "timestamp": "2025-11-06T01:00:00.000Z"
+  },
+  "totalEarthquakes": 12,
+  "pagination": {
+    "page": 1,
+    "limit": 100,
+    "totalPages": 1,
+    "hasMore": false
+  }
+}
+```
+
+## Error Responses
+
+### Missing Magnitude Parameter
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The 'mag' parameter is required and must be a positive number greater than 0."
+}
+```
+
+### Invalid Magnitude Value
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The 'mag' parameter must be a positive number greater than 0."
+}
+```
+
+### Invalid Pagination
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "status": "Bad Request",
+  "message": "The 'page' parameter must be a positive integer greater than 0. Example: ?page=2"
+}
+```
+
+## Implementation Details
+
+- **Filter Logic:** `feature.properties.mag > magValue` (strictly greater than)
+- **Date Range:** From start of current year to today
+- **Filtering:** Applied after fetching all events from INGV (client-side filtering)
+- **Sorting:** Default sort is by time (most recent first: `-time`)
+- **Pagination:** Manual pagination applied after magnitude filtering
+- **Data Source:** INGV API with `orderby=time` and `format=geojson`
+
+## Magnitude Scale Reference
+
+<AccordionGroup>
+  <Accordion title="Micro (< 2.0)">
+    Not usually felt by people. Detected by seismographs. Occurs millions of times per year.
+  </Accordion>
+  
+  <Accordion title="Minor (2.0 - 3.9)">
+    Often felt but rarely causes damage. Occurs hundreds of thousands of times per year.
+  </Accordion>
+  
+  <Accordion title="Light (4.0 - 4.9)">
+    Noticeable shaking of indoor objects. Minor damage to buildings. Occurs tens of thousands of times per year.
+  </Accordion>
+  
+  <Accordion title="Moderate (5.0 - 5.9)">
+    Can cause damage to poorly constructed buildings. Slight damage to well-designed buildings. Occurs thousands of times per year.
+  </Accordion>
+  
+  <Accordion title="Strong (6.0 - 6.9)">
+    Destructive in populated areas up to 160 km away. Occurs about 100-150 times per year.
+  </Accordion>
+  
+  <Accordion title="Major (7.0 - 7.9)">
+    Serious damage over large areas. Strong to violent shaking. Occurs about 10-20 times per year.
+  </Accordion>
+  
+  <Accordion title="Great (8.0+)">
+    Can cause catastrophic damage over vast areas. Occurs about once per year or less.
+  </Accordion>
+</AccordionGroup>
+
+## Magnitude Types
+
+The API returns different magnitude types in the `magType` field:
+
+- **ML** (Local Magnitude / Richter Scale) - Best for nearby earthquakes
+- **Mw** (Moment Magnitude) - Most accurate for large earthquakes
+- **Mb** (Body Wave Magnitude) - Based on body waves
+- **Ms** (Surface Wave Magnitude) - Based on surface waves
+
+## Use Cases
+
+- Filter for significant earthquakes only
+- Analyze major seismic events
+- Create alerts for high-magnitude earthquakes
+- Research and statistical analysis
+- News and media earthquake reporting
+
+## Example Queries
+
+```bash
+# Significant earthquakes (felt by many people)
+curl "https://api.terraquakeapi.com/v1/earthquakes/magnitude?mag=3.0"
+
+# Damaging earthquakes (potential structural damage)
+curl "https://api.terraquakeapi.com/v1/earthquakes/magnitude?mag=5.0"
+
+# Major earthquakes (serious damage potential)
+curl "https://api.terraquakeapi.com/v1/earthquakes/magnitude?mag=7.0"
+```
+
+## Related Endpoints
+
+- [By Depth](/api/earthquakes/by-depth) - Filter by depth
+- [By Date Range](/api/earthquakes/by-date-range) - Custom date range with magnitude filter
+- [Recent Earthquakes](/api/earthquakes/recent) - Year-to-date events

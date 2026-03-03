@@ -1,0 +1,372 @@
+---
+title: "Authentication"
+description: "Learn how to authenticate with the TerraQuake API"
+---
+
+## Overview
+
+TerraQuake API uses **JWT (JSON Web Token)** authentication for protected endpoints. Most endpoints are public and don't require authentication, making it easy to get started immediately.
+
+<Info>
+Public endpoints like `/earthquakes/*` and `/stations/*` don't require authentication. You can start querying earthquake data right away!
+</Info>
+
+## Public vs Protected Endpoints
+
+### Public Endpoints (No Authentication Required)
+
+These endpoints are accessible without any authentication:
+
+- **All Earthquake Endpoints**: `/earthquakes/recent`, `/earthquakes/today`, `/earthquakes/magnitude`, etc.
+- **All Station Endpoints**: `/stations`, `/stations/code`, `/stations/geojson`, etc.
+- **Most Utility Endpoints**: Statistics, FAQs, documentation, etc.
+
+### Protected Endpoints (Authentication Required)
+
+These endpoints require a valid JWT token:
+
+- **User Profile**: `GET /auth/me` - Get current user information
+- **Logout**: `POST /auth/logout` - Invalidate current session
+- **Change Password**: `POST /auth/change-password` - Update user password
+- **Admin Endpoints**: All endpoints under `/admin/*` (requires admin role)
+
+## Getting Started with Authentication
+
+<Steps>
+  <Step title="Create an Account">
+    Register for an account using the signup endpoint:
+
+    <CodeGroup>
+
+    ```bash cURL
+    curl -X POST https://api.terraquakeapi.com/auth/signup \
+      -H "Content-Type: application/json" \
+      -d '{
+        "email": "your-email@example.com",
+        "password": "your-secure-password",
+        "name": "Your Name"
+      }'
+    ```
+
+    ```javascript JavaScript
+    const response = await fetch(
+      'https://api.terraquakeapi.com/auth/signup',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: 'your-email@example.com',
+          password: 'your-secure-password',
+          name: 'Your Name'
+        })
+      }
+    );
+
+const data = await response.json();
+console.log(data);
+    ```
+
+    ```python Python
+    import requests
+
+response = requests.post(
+  'https://api.terraquakeapi.com/auth/signup',
+  json={
+    'email': 'your-email@example.com',
+    'password': 'your-secure-password',
+    'name': 'Your Name'
+  }
+)
+
+data = response.json()
+print(data)
+    ```
+
+    </CodeGroup>
+
+    <Note>
+    You'll receive a confirmation email after registration. Check your inbox to verify your account.
+    </Note>
+  </Step>
+
+  <Step title="Sign In">
+    Once your account is verified, sign in to get your JWT token:
+
+    <CodeGroup>
+
+    ```bash cURL
+    curl -X POST https://api.terraquakeapi.com/auth/signin \
+      -H "Content-Type: application/json" \
+      -d '{
+        "email": "your-email@example.com",
+        "password": "your-secure-password"
+      }'
+    ```
+
+    ```javascript JavaScript
+    const response = await fetch(
+      'https://api.terraquakeapi.com/auth/signin',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: 'your-email@example.com',
+          password: 'your-secure-password'
+        })
+      }
+    );
+
+const data = await response.json();
+const token = data.token;
+    ```
+
+    ```python Python
+    import requests
+
+response = requests.post(
+  'https://api.terraquakeapi.com/auth/signin',
+  json={
+    'email': 'your-email@example.com',
+    'password': 'your-secure-password'
+  }
+)
+
+data = response.json()
+token = data['token']
+    ```
+
+    </CodeGroup>
+
+    **Response**:
+    ```json
+    {
+      "success": true,
+      "message": "Login successful",
+      "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+      "user": {
+        "_id": "507f1f77bcf86cd799439011",
+        "email": "your-email@example.com",
+        "name": "Your Name",
+        "role": ["user"]
+      }
+    }
+    ```
+
+    <Warning>
+    Store the token securely. Never expose it in client-side code or commit it to version control.
+    </Warning>
+  </Step>
+
+  <Step title="Use the Token">
+    Include the JWT token in the `Authorization` header for protected endpoints:
+
+    <CodeGroup>
+
+    ```bash cURL
+    curl https://api.terraquakeapi.com/auth/me \
+      -H "Authorization: Bearer YOUR_JWT_TOKEN"
+    ```
+
+    ```javascript JavaScript
+    const response = await fetch(
+      'https://api.terraquakeapi.com/auth/me',
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+const data = await response.json();
+console.log(data.data.user);
+    ```
+
+    ```python Python
+    import requests
+
+response = requests.get(
+  'https://api.terraquakeapi.com/auth/me',
+  headers={
+    'Authorization': f'Bearer {token}'
+  }
+)
+
+user = response.json()['data']['user']
+print(user)
+    ```
+
+    </CodeGroup>
+  </Step>
+</Steps>
+
+## Token Validation
+
+When you make a request to a protected endpoint, the API validates your token through these checks:
+
+1. **Token Presence**: The `Authorization` header must include a valid token
+2. **Token Format**: Must be in the format `Bearer <token>`
+3. **Signature Verification**: Token signature is verified using the secret key
+4. **Expiration Check**: Token must not be expired
+5. **Blacklist Check**: Token must not be revoked (e.g., after logout)
+6. **User Validation**: User account must exist and be active
+
+<Info>
+Token validation is handled by the authentication middleware at `/home/daytona/workspace/source/backend/src/middleware/authMiddleware.js:11`
+</Info>
+
+## Error Responses
+
+The API returns specific error messages for authentication failures:
+
+### Missing Token
+```json
+{
+  "success": false,
+  "message": "Authorization token missing",
+  "statusCode": 401
+}
+```
+
+### Invalid or Expired Token
+```json
+{
+  "success": false,
+  "message": "Invalid, expired, or revoked token. Please log in again.",
+  "statusCode": 401
+}
+```
+
+### User Not Found
+```json
+{
+  "success": false,
+  "message": "User account not found or has been deleted.",
+  "statusCode": 404
+}
+```
+
+### Malformed Token
+```json
+{
+  "success": false,
+  "message": "Malformed or invalid token",
+  "statusCode": 401
+}
+```
+
+## Password Management
+
+### Change Password
+
+Update your password while authenticated:
+
+```bash cURL
+curl -X POST https://api.terraquakeapi.com/auth/change-password \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "currentPassword": "old-password",
+    "newPassword": "new-secure-password"
+  }'
+```
+
+### Forgot Password
+
+Request a password reset link:
+
+```bash cURL
+curl -X POST https://api.terraquakeapi.com/auth/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "your-email@example.com"
+  }'
+```
+
+You'll receive an email with a reset token.
+
+### Reset Password
+
+Reset your password using the token from the email:
+
+```bash cURL
+curl -X POST https://api.terraquakeapi.com/auth/reset-password/RESET_TOKEN \
+  -H "Content-Type: application/json" \
+  -d '{
+    "newPassword": "new-secure-password"
+  }'
+```
+
+## Logout
+
+Invalidate your current session token:
+
+```bash cURL
+curl -X POST https://api.terraquakeapi.com/auth/logout \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+```
+
+<Warning>
+After logout, the token is added to a blacklist and cannot be used again. You must sign in again to get a new token.
+</Warning>
+
+## OAuth Authentication
+
+TerraQuake API also supports OAuth authentication with Google:
+
+### Google Sign-In Flow
+
+1. **Redirect to Google**: Direct users to `/auth/google`
+2. **Handle Callback**: After user grants permission, Google redirects to `/auth/google/callback`
+3. **Receive Token**: The API returns a JWT token for the authenticated user
+
+```javascript Example: Google OAuth
+// Step 1: Redirect user to Google
+window.location.href = 'https://api.terraquakeapi.com/auth/google';
+
+// Step 2: Handle callback (Google redirects back)
+// The callback URL will include the JWT token
+```
+
+<Tip>
+OAuth is great for applications where you want to avoid managing user passwords directly.
+</Tip>
+
+## Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Secure Storage" icon="lock">
+    Store tokens securely in environment variables or secure storage (e.g., httpOnly cookies)
+  </Card>
+  <Card title="Token Refresh" icon="rotate">
+    Sign in again when tokens expire rather than storing long-lived tokens
+  </Card>
+  <Card title="HTTPS Only" icon="shield">
+    Always use HTTPS when transmitting tokens to prevent interception
+  </Card>
+  <Card title="Logout Properly" icon="right-from-bracket">
+    Always call the logout endpoint when users sign out to invalidate tokens
+  </Card>
+</CardGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card
+    title="Error Handling"
+    icon="triangle-exclamation"
+    href="/concepts/error-handling"
+  >
+    Learn how to handle authentication errors gracefully
+  </Card>
+  <Card
+    title="API Reference"
+    icon="book"
+    href="/api/earthquakes/overview"
+  >
+    Explore all available endpoints
+  </Card>
+</CardGroup>

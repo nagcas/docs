@@ -1,0 +1,630 @@
+---
+title: 'Location Queries'
+description: 'Query earthquakes by coordinates, radius, and Italian regions using geographic filters'
+---
+
+## Overview
+
+The TerraQuake API provides powerful location-based querying capabilities. You can search for earthquakes by:
+
+- Geographic coordinates with radius
+- Italian administrative regions
+- Custom bounding boxes
+
+All location calculations use the **Haversine formula** for accurate distance computation on the Earth's surface.
+
+## Coordinate-Based Search
+
+Query earthquakes near a specific latitude/longitude point within a given radius.
+
+### Basic Usage
+
+```bash cURL
+curl "https://api.terraquakeapi.com/api/v1/earthquakes/location?latitude=42.3601&longitude=13.3957&radius=50"
+```
+
+```python Python
+import requests
+
+# Find earthquakes near L'Aquila
+url = 'https://api.terraquakeapi.com/api/v1/earthquakes/location'
+params = {
+    'latitude': 42.3601,   # L'Aquila
+    'longitude': 13.3957,
+    'radius': 50,          # 50 km radius
+    'limit': 100
+}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+print(f"Found {data['totalEarthquakes']} earthquakes within 50km of L'Aquila")
+```
+
+```javascript JavaScript
+const url = new URL('https://api.terraquakeapi.com/api/v1/earthquakes/location');
+url.searchParams.set('latitude', '42.3601');
+url.searchParams.set('longitude', '13.3957');
+url.searchParams.set('radius', '50');
+
+const response = await fetch(url);
+const data = await response.json();
+
+console.log(`Found ${data.totalEarthquakes} earthquakes`);
+```
+
+### Parameters
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `latitude` | number | Yes | - | Latitude in decimal degrees (-90 to 90) |
+| `longitude` | number | Yes | - | Longitude in decimal degrees (-180 to 180) |
+| `radius` | number | No | 50 | Search radius in kilometers |
+| `limit` | number | No | 50 | Results per page |
+| `page` | number | No | 1 | Page number |
+
+<Info>
+  The default radius is **50 km**. The API uses a bounding box for initial filtering, then applies precise Haversine distance calculation.
+</Info>
+
+## Finding Earthquakes Near Cities
+
+Here are examples for major Italian cities:
+
+<Tabs>
+  <Tab title="Rome">
+    ```python Python
+    import requests
+
+    url = 'https://api.terraquakeapi.com/api/v1/earthquakes/location'
+    params = {
+        'latitude': 41.9028,
+        'longitude': 12.4964,
+        'radius': 100,
+        'limit': 50
+    }
+
+    response = requests.get(url, params=params)
+    data = response.json()
+
+    for event in data['payload'][:10]:
+        print(f"{event['time']} - M{event['magnitude']} - {event['place']}")
+    ```
+  </Tab>
+
+  <Tab title="Naples">
+    ```python Python
+    import requests
+
+    # Naples (Vesuvius area)
+    url = 'https://api.terraquakeapi.com/api/v1/earthquakes/location'
+    params = {
+        'latitude': 40.8518,
+        'longitude': 14.2681,
+        'radius': 30,  # Smaller radius for urban area
+        'limit': 100
+    }
+
+    response = requests.get(url, params=params)
+    data = response.json()
+    ```
+  </Tab>
+
+  <Tab title="Milan">
+    ```javascript JavaScript
+    const url = new URL('https://api.terraquakeapi.com/api/v1/earthquakes/location');
+    url.searchParams.set('latitude', '45.4642');
+    url.searchParams.set('longitude', '9.1900');
+    url.searchParams.set('radius', '75');
+
+    const response = await fetch(url);
+    const data = await response.json();
+    ```
+  </Tab>
+
+  <Tab title="Venice">
+    ```javascript JavaScript
+    const url = new URL('https://api.terraquakeapi.com/api/v1/earthquakes/location');
+    url.searchParams.set('latitude', '45.4408');
+    url.searchParams.set('longitude', '12.3155');
+    url.searchParams.set('radius', '60');
+
+    const response = await fetch(url);
+    const data = await response.json();
+    ```
+  </Tab>
+</Tabs>
+
+## Italian Region Queries
+
+Query earthquakes within Italian administrative regions using predefined bounding boxes.
+
+### Supported Regions
+
+All 20 Italian regions are supported:
+
+<AccordionGroup>
+  <Accordion title="Northern Italy (8 regions)">
+    - **Valle d'Aosta** (`valle_d_aosta`)
+    - **Piemonte** (`piemonte`)
+    - **Lombardia** (`lombardia`)
+    - **Liguria** (`liguria`)
+    - **Trentino-Alto Adige** (`trentino_alto_adige`)
+    - **Veneto** (`veneto`)
+    - **Friuli-Venezia Giulia** (`friuli_venezia_giulia`)
+    - **Emilia-Romagna** (`emilia_romagna`)
+  </Accordion>
+
+  <Accordion title="Central Italy (6 regions)">
+    - **Toscana** (`toscana`)
+    - **Umbria** (`umbria`)
+    - **Marche** (`marche`)
+    - **Lazio** (`lazio`)
+    - **Abruzzo** (`abruzzo`)
+    - **Molise** (`molise`)
+  </Accordion>
+
+  <Accordion title="Southern Italy (6 regions)">
+    - **Campania** (`campania`)
+    - **Puglia** (`puglia`)
+    - **Basilicata** (`basilicata`)
+    - **Calabria** (`calabria`)
+    - **Sicilia** (`sicilia`)
+    - **Sardegna** (`sardegna`)
+  </Accordion>
+</AccordionGroup>
+
+### Query by Region
+
+```bash cURL
+curl "https://api.terraquakeapi.com/api/v1/earthquakes/region?region=Calabria"
+```
+
+```python Python
+import requests
+
+# Get earthquakes in Calabria
+url = 'https://api.terraquakeapi.com/api/v1/earthquakes/region'
+params = {
+    'region': 'Calabria',  # Case-insensitive
+    'limit': 100,
+    'sort': '-magnitude'
+}
+
+response = requests.get(url, params=params)
+data = response.json()
+
+print(f"Total earthquakes in Calabria: {data['totalEarthquakes']}")
+
+# Find strongest event
+if data['payload']:
+    strongest = data['payload'][0]
+    print(f"Strongest: M{strongest['magnitude']} at {strongest['place']}")
+```
+
+```javascript JavaScript
+const region = 'Sicilia';
+const url = `https://api.terraquakeapi.com/api/v1/earthquakes/region?region=${region}`;
+
+const response = await fetch(url);
+const data = await response.json();
+
+console.log(`${data.totalEarthquakes} earthquakes in ${region}`);
+```
+
+<Warning>
+  Region names must match the supported list. Use lowercase or the exact case shown above. The API performs case-insensitive matching.
+</Warning>
+
+### Compare Multiple Regions
+
+```python Python
+import requests
+import pandas as pd
+
+regions = ['Calabria', 'Sicilia', 'Campania', 'Abruzzo', 'Friuli_Venezia_Giulia']
+url = 'https://api.terraquakeapi.com/api/v1/earthquakes/region'
+
+results = []
+
+for region in regions:
+    response = requests.get(url, params={'region': region, 'limit': 500})
+    data = response.json()
+    
+    results.append({
+        'region': region,
+        'total_events': data['totalEarthquakes'],
+        'avg_magnitude': sum(e['magnitude'] for e in data['payload']) / len(data['payload']) if data['payload'] else 0
+    })
+
+df = pd.DataFrame(results)
+print(df.sort_values('total_events', ascending=False))
+```
+
+## Haversine Distance Calculation
+
+The API uses the Haversine formula to calculate precise great-circle distances between coordinates.
+
+<Steps>
+  <Step title="Initial Bounding Box Filter">
+    The API first creates a bounding box around the search point:
+    ```python
+    degree_radius = radius_km / 111  # 1° ≈ 111 km
+    min_lat = max(latitude - degree_radius, -90)
+    max_lat = min(latitude + degree_radius, 90)
+    min_lon = max(longitude - degree_radius, -180)
+    max_lon = min(longitude + degree_radius, 180)
+    ```
+  </Step>
+
+  <Step title="Fetch Candidate Events">
+    Earthquakes within the bounding box are retrieved from the INGV API.
+  </Step>
+
+  <Step title="Precise Distance Filtering">
+    Each earthquake is filtered using Haversine distance:
+    ```python
+    from haversine import haversine
+
+    user_point = (latitude, longitude)
+    quake_point = (quake_lat, quake_lon)
+    distance_km = haversine(user_point, quake_point)
+
+    if distance_km <= radius:
+        # Include in results
+    ```
+  </Step>
+</Steps>
+
+### Client-Side Distance Calculation
+
+You can also calculate distances client-side:
+
+```python Python
+import math
+
+def haversine_distance(lat1, lon1, lat2, lon2):
+    """
+    Calculate great-circle distance between two points on Earth.
+    Returns distance in kilometers.
+    """
+    R = 6371  # Earth's radius in km
+    
+    # Convert to radians
+    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+    
+    # Haversine formula
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.asin(math.sqrt(a))
+    
+    return R * c
+
+# Example usage
+distance = haversine_distance(41.9028, 12.4964, 42.3601, 13.3957)
+print(f"Rome to L'Aquila: {distance:.2f} km")
+```
+
+```javascript JavaScript
+function haversineDistance(lat1, lon1, lat2, lon2) {
+  const R = 6371; // Earth's radius in km
+  
+  const toRad = (deg) => deg * Math.PI / 180;
+  
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  
+  const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+  
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  
+  return R * c;
+}
+
+// Example
+const distance = haversineDistance(41.9028, 12.4964, 42.3601, 13.3957);
+console.log(`Distance: ${distance.toFixed(2)} km`);
+```
+
+## Practical Examples
+
+### Build a Proximity Alert System
+
+```python Python
+import requests
+import time
+
+class EarthquakeMonitor:
+    def __init__(self, latitude, longitude, radius_km, min_magnitude):
+        self.lat = latitude
+        self.lon = longitude
+        self.radius = radius_km
+        self.min_mag = min_magnitude
+        self.seen_events = set()
+    
+    def check_for_earthquakes(self):
+        """Check for new earthquakes near location"""
+        url = 'https://api.terraquakeapi.com/api/v1/earthquakes/location'
+        params = {
+            'latitude': self.lat,
+            'longitude': self.lon,
+            'radius': self.radius,
+            'limit': 100
+        }
+        
+        response = requests.get(url, params=params)
+        data = response.json()
+        
+        new_events = []
+        for event in data['payload']:
+            event_id = event.get('eventId') or event['time']
+            
+            if event_id not in self.seen_events and event['magnitude'] >= self.min_mag:
+                self.seen_events.add(event_id)
+                new_events.append(event)
+        
+        return new_events
+    
+    def alert(self, event):
+        """Send alert for new earthquake"""
+        print(f"\n🚨 EARTHQUAKE ALERT")
+        print(f"Magnitude: {event['magnitude']}")
+        print(f"Location: {event['place']}")
+        print(f"Time: {event['time']}")
+        print(f"Depth: {event['depth']} km")
+
+# Monitor earthquakes near Naples
+monitor = EarthquakeMonitor(
+    latitude=40.8518,
+    longitude=14.2681,
+    radius_km=50,
+    min_magnitude=2.5
+)
+
+# Check every 5 minutes
+while True:
+    new_quakes = monitor.check_for_earthquakes()
+    for quake in new_quakes:
+        monitor.alert(quake)
+    
+    time.sleep(300)  # 5 minutes
+```
+
+### Map Earthquakes by Region
+
+```python Python
+import requests
+import folium
+
+def create_region_map(region_name):
+    """Create an interactive map of earthquakes in a region"""
+    url = 'https://api.terraquakeapi.com/api/v1/earthquakes/region'
+    params = {'region': region_name, 'limit': 500}
+    
+    response = requests.get(url, params=params)
+    data = response.json()
+    
+    if not data['payload']:
+        print(f"No earthquakes found in {region_name}")
+        return
+    
+    # Calculate center point
+    avg_lat = sum(e['coordinates'][1] for e in data['payload']) / len(data['payload'])
+    avg_lon = sum(e['coordinates'][0] for e in data['payload']) / len(data['payload'])
+    
+    # Create map
+    m = folium.Map(location=[avg_lat, avg_lon], zoom_start=8)
+    
+    # Add earthquake markers
+    for event in data['payload']:
+        lon, lat = event['coordinates'][:2]
+        mag = event['magnitude']
+        
+        # Color by magnitude
+        color = 'green' if mag < 3 else 'orange' if mag < 4 else 'red'
+        
+        folium.CircleMarker(
+            location=[lat, lon],
+            radius=mag * 2,
+            popup=f"M{mag} - {event['place']}<br>{event['time']}",
+            color=color,
+            fill=True
+        ).add_to(m)
+    
+    m.save(f'earthquakes_{region_name}.html')
+    print(f"Map saved: earthquakes_{region_name}.html")
+
+# Create maps for high-activity regions
+for region in ['Calabria', 'Sicilia', 'Campania']:
+    create_region_map(region)
+```
+
+### Find Nearest Earthquake to a Point
+
+```python Python
+import requests
+from haversine import haversine
+
+def find_nearest_earthquake(lat, lon, max_radius=200):
+    """Find the nearest earthquake to a coordinate"""
+    url = 'https://api.terraquakeapi.com/api/v1/earthquakes/location'
+    params = {
+        'latitude': lat,
+        'longitude': lon,
+        'radius': max_radius,
+        'limit': 500
+    }
+    
+    response = requests.get(url, params=params)
+    data = response.json()
+    
+    if not data['payload']:
+        return None
+    
+    user_point = (lat, lon)
+    nearest = None
+    min_distance = float('inf')
+    
+    for event in data['payload']:
+        event_lon, event_lat = event['coordinates'][:2]
+        event_point = (event_lat, event_lon)
+        distance = haversine(user_point, event_point)
+        
+        if distance < min_distance:
+            min_distance = distance
+            nearest = event
+    
+    nearest['distance_km'] = min_distance
+    return nearest
+
+# Find nearest earthquake to Rome
+nearest = find_nearest_earthquake(41.9028, 12.4964)
+if nearest:
+    print(f"Nearest earthquake: {nearest['distance_km']:.2f} km away")
+    print(f"M{nearest['magnitude']} - {nearest['place']}")
+```
+
+## Region Bounding Boxes
+
+For reference, here are the bounding boxes used for each region:
+
+<Accordion title="View All Region Coordinates">
+  ```json
+  {
+    "abruzzo": {
+      "minlatitude": 42.0195,
+      "maxlatitude": 42.7025,
+      "minlongitude": 13.6345,
+      "maxlongitude": 14.7390
+    },
+    "basilicata": {
+      "minlatitude": 39.5460,
+      "maxlatitude": 41.1335,
+      "minlongitude": 14.9875,
+      "maxlongitude": 16.6874
+    },
+    "calabria": {
+      "minlatitude": 37.9145,
+      "maxlatitude": 40.1444,
+      "minlongitude": 15.6311,
+      "maxlongitude": 17.2076
+    },
+    "campania": {
+      "minlatitude": 39.6567,
+      "maxlatitude": 41.7099,
+      "minlongitude": 13.5881,
+      "maxlongitude": 15.5310
+    },
+    "emilia_romagna": {
+      "minlatitude": 43.5295,
+      "maxlatitude": 45.1120,
+      "minlongitude": 9.5797,
+      "maxlongitude": 12.8496
+    },
+    "friuli_venezia_giulia": {
+      "minlatitude": 45.6400,
+      "maxlatitude": 46.6500,
+      "minlongitude": 12.1000,
+      "maxlongitude": 13.8500
+    },
+    "lazio": {
+      "minlatitude": 41.5449,
+      "maxlatitude": 42.3536,
+      "minlongitude": 11.4788,
+      "maxlongitude": 13.7316
+    },
+    "liguria": {
+      "minlatitude": 43.4295,
+      "maxlatitude": 44.3462,
+      "minlongitude": 7.9841,
+      "maxlongitude": 9.6800
+    },
+    "lombardia": {
+      "minlatitude": 44.9532,
+      "maxlatitude": 46.8800,
+      "minlongitude": 8.0584,
+      "maxlongitude": 10.4921
+    },
+    "marche": {
+      "minlatitude": 42.5500,
+      "maxlatitude": 44.6617,
+      "minlongitude": 12.0000,
+      "maxlongitude": 13.8700
+    },
+    "molise": {
+      "minlatitude": 41.1950,
+      "maxlatitude": 42.2200,
+      "minlongitude": 13.8400,
+      "maxlongitude": 15.0000
+    },
+    "piemonte": {
+      "minlatitude": 44.8820,
+      "maxlatitude": 47.0707,
+      "minlongitude": 6.6197,
+      "maxlongitude": 8.5235
+    },
+    "puglia": {
+      "minlatitude": 39.7850,
+      "maxlatitude": 41.4317,
+      "minlongitude": 15.8276,
+      "maxlongitude": 18.5084
+    },
+    "sardegna": {
+      "minlatitude": 38.5150,
+      "maxlatitude": 41.2690,
+      "minlongitude": 8.0804,
+      "maxlongitude": 9.8500
+    },
+    "sicilia": {
+      "minlatitude": 36.6199,
+      "maxlatitude": 38.2900,
+      "minlongitude": 12.2900,
+      "maxlongitude": 14.8400
+    },
+    "toscana": {
+      "minlatitude": 42.0420,
+      "maxlatitude": 44.2090,
+      "minlongitude": 9.6800,
+      "maxlongitude": 11.8768
+    },
+    "trentino_alto_adige": {
+      "minlatitude": 45.4145,
+      "maxlatitude": 47.0985,
+      "minlongitude": 10.5173,
+      "maxlongitude": 12.3900
+    },
+    "umbria": {
+      "minlatitude": 42.9400,
+      "maxlatitude": 43.6640,
+      "minlongitude": 11.2880,
+      "maxlongitude": 13.0747
+    },
+    "valle_d_aosta": {
+      "minlatitude": 45.4397,
+      "maxlatitude": 45.8570,
+      "minlongitude": 6.7410,
+      "maxlongitude": 7.5858
+    },
+    "veneto": {
+      "minlatitude": 44.3636,
+      "maxlatitude": 46.7167,
+      "minlongitude": 10.4943,
+      "maxlongitude": 12.6023
+    }
+  }
+  ```
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Filtering Earthquakes" icon="filter" href="/guides/filtering-earthquakes">
+    Learn about magnitude, depth, and time filters
+  </Card>
+  <Card title="Working with Stations" icon="tower-broadcast" href="/guides/working-with-stations">
+    Query seismic monitoring station data
+  </Card>
+</CardGroup>

@@ -1,0 +1,103 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "name": "TerraQuake API",
+  "theme": "aspen",
+  "colors": {
+    "primary": "#D97706",
+    "light": "#FCD34D",
+    "dark": "#92400E"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/nagcas/TerraQuakeApi"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/nagcas/TerraQuakeApi"
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "authentication"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/rate-limiting",
+              "concepts/pagination",
+              "concepts/error-handling",
+              "concepts/response-format"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/filtering-earthquakes",
+              "guides/location-queries",
+              "guides/working-with-stations",
+              "guides/best-practices"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Earthquakes",
+            "pages": [
+              "api/earthquakes/overview",
+              "api/earthquakes/recent",
+              "api/earthquakes/today",
+              "api/earthquakes/last-week",
+              "api/earthquakes/by-month",
+              "api/earthquakes/by-date-range",
+              "api/earthquakes/by-location",
+              "api/earthquakes/by-region",
+              "api/earthquakes/by-depth",
+              "api/earthquakes/by-magnitude",
+              "api/earthquakes/by-event-id"
+            ]
+          },
+          {
+            "group": "Stations",
+            "pages": [
+              "api/stations/overview",
+              "api/stations/get-all",
+              "api/stations/by-code",
+              "api/stations/geojson",
+              "api/stations/status-open",
+              "api/stations/status-closed",
+              "api/stations/statistics"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Resources",
+        "groups": [
+          {
+            "group": "Resources",
+            "pages": [
+              "resources/data-sources",
+              "resources/sdks-libraries",
+              "resources/changelog",
+              "resources/contributing"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
