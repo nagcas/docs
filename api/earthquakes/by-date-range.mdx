@@ -13,14 +13,17 @@ Fetches earthquake events within a specified date range (inclusive) with optiona
 
 ## Parameters
 
-<ParamField query="startdate" type="string" required>
-  Start date in ISO format (YYYY-MM-DD).
-  
-  **Validation:**
-  - Must match format `YYYY-MM-DD` (e.g., "2024-01-01")
-  - Must be earlier than or equal to `enddate`
-  - Returns 400 error if missing: "Both 'startdate' and 'enddate' parameters are required. Example: ?startdate=2024-01-01&enddate=2024-01-31"
-  - Returns 400 error if invalid format: "Invalid date format. Use ISO format: YYYY-MM-DD. Example: ?startdate=2024-01-01"
+<ParamField
+  query='startdate'
+  type='string'
+  required
+>
+  Start date in ISO format (YYYY-MM-DD). **Validation:** - Must match format
+  `YYYY-MM-DD` (e.g., "2024-01-01") - Must be earlier than or equal to `enddate`
+  - Returns 400 error if missing: "Both 'startdate' and 'enddate' parameters are
+  required. Example: ?startdate=2024-01-01&enddate=2024-01-31" - Returns 400
+  error if invalid format: "Invalid date format. Use ISO format: YYYY-MM-DD.
+  Example: ?startdate=2024-01-01"
 </ParamField>
 
 <ParamField query="enddate" type="string" required>
@@ -32,20 +35,22 @@ Fetches earthquake events within a specified date range (inclusive) with optiona
   - Returns 400 error if `startdate > enddate`: "'startdate' must be earlier than or equal to 'enddate'."
 </ParamField>
 
-<ParamField query="minmag" type="number">
-  Minimum magnitude filter (optional).
-  
-  **Validation:**
-  - Must be a positive number if provided
-  - Returns 400 error if invalid: "'minmag' must be a positive number."
+<ParamField
+  query='minmag'
+  type='number'
+>
+  Minimum magnitude filter (optional). **Validation:** - Must be a positive
+  number if provided - Returns 400 error if invalid: "'minmag' must be a
+  positive number."
 </ParamField>
 
-<ParamField query="maxdepth" type="number">
-  Maximum depth filter in kilometers (optional).
-  
-  **Validation:**
-  - Must be a positive number if provided
-  - Returns 400 error if invalid: "'maxdepth' must be a positive number."
+<ParamField
+  query='maxdepth'
+  type='number'
+>
+  Maximum depth filter in kilometers (optional). **Validation:** - Must be a
+  positive number if provided - Returns 400 error if invalid: "'maxdepth' must
+  be a positive number."
 </ParamField>
 
 <ParamField query="page" type="integer" default="1">
@@ -64,24 +69,22 @@ Fetches earthquake events within a specified date range (inclusive) with optiona
   - Returns 400 error if invalid
 </ParamField>
 
-<ParamField query="sort" type="string" default="-time">
-  Sort order for results. Prefix with `-` for descending order.
-  
-  **Allowed values:**
-  - `time` or `-time` (default: descending)
-  - `magnitude` or `-magnitude`
-  - `depth` or `-depth`
+<ParamField
+  query='sort'
+  type='string'
+  default='-time'
+>
+  Sort order for results. Prefix with `-` for descending order. **Allowed
+  values:** - `time` or `-time` (default: descending) - `magnitude` or
+  `-magnitude` - `depth` or `-depth`
 </ParamField>
 
-<ParamField query="fields" type="string">
-  Comma-separated list of fields to include in response.
-  
-  **Allowed values:**
-  - `time`
-  - `magnitude`
-  - `depth`
-  - `place`
-  - `coordinates`
+<ParamField
+  query='fields'
+  type='string'
+>
+  Comma-separated list of fields to include in response. **Allowed values:** -
+  `time` - `magnitude` - `depth` - `place` - `coordinates`
 </ParamField>
 
 ## Request Example
@@ -92,11 +95,14 @@ Fetches earthquake events within a specified date range (inclusive) with optiona
 curl "https://api.terraquakeapi.com/v1/earthquakes/range-time?startdate=2025-09-01&enddate=2025-09-30"
 
 # With magnitude filter
+
 curl "https://api.terraquakeapi.com/v1/earthquakes/range-time?startdate=2025-09-01&enddate=2025-09-30&minmag=3.0"
 
 # With magnitude and depth filters
+
 curl "https://api.terraquakeapi.com/v1/earthquakes/range-time?startdate=2025-09-01&enddate=2025-09-30&minmag=3.0&maxdepth=50"
-```
+
+````
 
 ```javascript JavaScript
 // Basic date range query
@@ -131,7 +137,7 @@ const filteredResponse = await fetch(
     limit: 50
   })
 );
-```
+````
 
 ```python Python
 import requests
@@ -167,39 +173,66 @@ filtered_response = requests.get(
     }
 )
 ```
+
 </CodeGroup>
 
 ## Response
 
-<ResponseField name="success" type="boolean">
+<ResponseField
+  name='success'
+  type='boolean'
+>
   Indicates if the request was successful
 </ResponseField>
 
-<ResponseField name="code" type="integer">
+<ResponseField
+  name='code'
+  type='integer'
+>
   HTTP status code (200 for success)
 </ResponseField>
 
-<ResponseField name="status" type="string">
+<ResponseField
+  name='status'
+  type='string'
+>
   HTTP status message ("OK" for success)
 </ResponseField>
 
-<ResponseField name="message" type="string">
-  Human-readable message including date range and applied filters. Format: "Earthquake events between {startdate} and {enddate}[ with magnitude ≥ {minmag}][ and depth ≤ {maxdepth} km]"
+<ResponseField
+  name='message'
+  type='string'
+>
+  Human-readable message including date range and applied filters. Format:
+  "Earthquake events between {startdate} and {enddate}[ with magnitude ≥{' '}
+  {minmag}][ and depth ≤ {maxdepth} km]"
 </ResponseField>
 
-<ResponseField name="payload" type="array">
+<ResponseField
+  name='payload'
+  type='array'
+>
   Array of GeoJSON Feature objects containing earthquake data
 </ResponseField>
 
-<ResponseField name="meta" type="object">
+<ResponseField
+  name='meta'
+  type='object'
+>
   Request metadata containing method, path, and timestamp
 </ResponseField>
 
-<ResponseField name="totalEarthquakes" type="integer">
+<ResponseField
+  name='totalEarthquakes'
+  type='integer'
+>
   Total count of earthquakes matching the query (after filters applied)
 </ResponseField>
 
-<ResponseField name="pagination" type="object">
+<ResponseField
+  name='pagination'
+  type='object'
+>
   Pagination details with page, limit, totalPages, and hasMore
 </ResponseField>
 
@@ -298,7 +331,7 @@ filtered_response = requests.get(
 
 - **Date Validation:** Uses regex `/^\d{4}-\d{2}-\d{2}$/` to validate ISO format
 - **Date Comparison:** Converts to Date objects to ensure startdate ≤ enddate
-- **Filter Application:** 
+- **Filter Application:**
   - `minmag`: Filters features where `feature.properties.mag >= magValue`
   - `maxdepth`: Filters features where `feature.properties.depth <= depthValue`
 - **Filter Order:** Filters applied after fetching all events from INGV
@@ -316,8 +349,8 @@ filtered_response = requests.get(
 
 ## Related Endpoints
 
-- [By Month](/api/earthquakes/by-month) - Specific month and year
-- [Recent Earthquakes](/api/earthquakes/recent) - Year-to-date events
-- [Last Week](/api/earthquakes/last-week) - Last 7 days
-- [By Magnitude](/api/earthquakes/by-magnitude) - Filter by magnitude only
-- [By Depth](/api/earthquakes/by-depth) - Filter by depth only
+- [By Month](/v1/earthquakes/by-month) - Specific month and year
+- [Recent Earthquakes](/v1/earthquakes/recent) - Year-to-date events
+- [Last Week](/v1/earthquakes/last-week) - Last 7 days
+- [By Magnitude](/v1/earthquakes/by-magnitude) - Filter by magnitude only
+- [By Depth](/v1/earthquakes/by-depth) - Filter by depth only

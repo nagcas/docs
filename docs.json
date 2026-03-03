@@ -25,11 +25,7 @@
         "groups": [
           {
             "group": "Get Started",
-            "pages": [
-              "introduction",
-              "quickstart",
-              "authentication"
-            ]
+            "pages": ["introduction", "quickstart", "authentication"]
           },
           {
             "group": "Core Concepts",
@@ -57,29 +53,29 @@
           {
             "group": "Earthquakes",
             "pages": [
-              "api/earthquakes/overview",
-              "api/earthquakes/recent",
-              "api/earthquakes/today",
-              "api/earthquakes/last-week",
-              "api/earthquakes/by-month",
-              "api/earthquakes/by-date-range",
-              "api/earthquakes/by-location",
-              "api/earthquakes/by-region",
-              "api/earthquakes/by-depth",
-              "api/earthquakes/by-magnitude",
-              "api/earthquakes/by-event-id"
+              "v1/earthquakes/overview",
+              "v1/earthquakes/recent",
+              "v1/earthquakes/today",
+              "v1/earthquakes/last-week",
+              "v1/earthquakes/by-month",
+              "v1/earthquakes/by-date-range",
+              "v1/earthquakes/by-location",
+              "v1/earthquakes/by-region",
+              "v1/earthquakes/by-depth",
+              "v1/earthquakes/by-magnitude",
+              "v1/earthquakes/by-event-id"
             ]
           },
           {
             "group": "Stations",
             "pages": [
-              "api/stations/overview",
-              "api/stations/get-all",
-              "api/stations/by-code",
-              "api/stations/geojson",
-              "api/stations/status-open",
-              "api/stations/status-closed",
-              "api/stations/statistics"
+              "v1/stations/overview",
+              "v1/stations/get-all",
+              "v1/stations/by-code",
+              "v1/stations/geojson",
+              "v1/stations/status-open",
+              "v1/stations/status-closed",
+              "v1/stations/statistics"
             ]
           }
         ]
