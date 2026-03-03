@@ -13,13 +13,14 @@ Fetches complete details for a single earthquake event using its unique event id
 
 ## Parameters
 
-<ParamField query="eventId" type="integer" required>
-  Unique earthquake event identifier.
-  
-  **Validation:**
-  - Must be a valid integer
-  - Must exist in the current year's earthquake database
-  - Returns 404 error if not found: "No event found with ID {eventId}"
+<ParamField
+  query='eventId'
+  type='integer'
+  required
+>
+  Unique earthquake event identifier. **Validation:** - Must be a valid integer
+  - Must exist in the current year's earthquake database - Returns 404 error if
+  not found: "No event found with ID {eventId}"
 </ParamField>
 
 ## Request Example
@@ -32,7 +33,7 @@ curl "https://api.terraquakeapi.com/v1/earthquakes/eventId?eventId=44278572"
 ```javascript JavaScript
 const eventId = 44278572;
 const response = await fetch(
-  `https://api.terraquakeapi.com/v1/earthquakes/eventId?eventId=${eventId}`
+  `https://api.terraquakeapi.com/v1/earthquakes/eventId?eventId=${eventId}`,
 );
 const data = await response.json();
 
@@ -40,7 +41,7 @@ if (data.success) {
   const quake = data.payload[0];
   const { eventId, mag, place, time, author } = quake.properties;
   const [lon, lat, depth] = quake.geometry.coordinates;
-  
+
   console.log(`Event ID: ${eventId}`);
   console.log(`Magnitude: ${mag}`);
   console.log(`Location: ${place}`);
@@ -67,7 +68,7 @@ if data.get('success'):
     quake = data['payload'][0]
     props = quake['properties']
     lon, lat, depth = quake['geometry']['coordinates']
-    
+
     print(f"Event ID: {props['eventId']}")
     print(f"Magnitude: {props['mag']}")
     print(f"Location: {props['place']}")
@@ -78,48 +79,60 @@ if data.get('success'):
 else:
     print('Event not found')
 ```
+
 </CodeGroup>
 
 ## Response
 
-<ResponseField name="success" type="boolean">
+<ResponseField
+  name='success'
+  type='boolean'
+>
   Indicates if the request was successful
 </ResponseField>
 
-<ResponseField name="code" type="integer">
+<ResponseField
+  name='code'
+  type='integer'
+>
   HTTP status code (200 for success, 404 if not found)
 </ResponseField>
 
-<ResponseField name="status" type="string">
+<ResponseField
+  name='status'
+  type='string'
+>
   HTTP status message ("OK" for success, "Not Found" if event doesn't exist)
 </ResponseField>
 
-<ResponseField name="message" type="string">
+<ResponseField
+  name='message'
+  type='string'
+>
   Human-readable message. Format: "Earthquakes event with id {eventId}"
 </ResponseField>
 
-<ResponseField name="payload" type="array">
-  Array containing a single GeoJSON Feature object with complete earthquake details:
-  
-  **Properties:**
-  - `eventId` (integer) - Unique event identifier (matches query parameter)
-  - `originId` (integer) - Origin identifier from INGV
-  - `time` (string) - ISO 8601 timestamp of earthquake occurrence
-  - `author` (string) - Reporting agency/organization
-  - `magType` (string) - Magnitude type (ML, Mw, Mb, Ms)
-  - `mag` (float) - Magnitude value
-  - `magAuthor` (string) - Magnitude determination author
-  - `type` (string) - Event type ("earthquake")
-  - `place` (string) - Human-readable location description
-  - `version` (integer) - Event data version number
-  - `geojson_creationTime` (string) - GeoJSON creation timestamp
-  
-  **Geometry:**
-  - `type` (string) - Always "Point"
-  - `coordinates` (array) - [longitude, latitude, depth in km]
+<ResponseField
+  name='payload'
+  type='array'
+>
+  Array containing a single GeoJSON Feature object with complete earthquake
+  details: **Properties:** - `eventId` (integer) - Unique event identifier
+  (matches query parameter) - `originId` (integer) - Origin identifier from INGV
+  - `time` (string) - ISO 8601 timestamp of earthquake occurrence - `author`
+  (string) - Reporting agency/organization - `magType` (string) - Magnitude type
+  (ML, Mw, Mb, Ms) - `mag` (float) - Magnitude value - `magAuthor` (string) -
+  Magnitude determination author - `type` (string) - Event type ("earthquake") -
+  `place` (string) - Human-readable location description - `version` (integer) -
+  Event data version number - `geojson_creationTime` (string) - GeoJSON creation
+  timestamp **Geometry:** - `type` (string) - Always "Point" - `coordinates`
+  (array) - [longitude, latitude, depth in km]
 </ResponseField>
 
-<ResponseField name="meta" type="object">
+<ResponseField
+  name='meta'
+  type='object'
+>
   Request metadata containing method, path, and timestamp
 </ResponseField>
 
@@ -206,21 +219,21 @@ Event IDs can be obtained from:
 ```javascript
 // Step 1: Get specific event details
 const eventResponse = await fetch(
-  'https://api.terraquakeapi.com/v1/earthquakes/eventId?eventId=44278572'
+  'https://api.terraquakeapi.com/v1/earthquakes/eventId?eventId=44278572',
 );
 const eventData = await eventResponse.json();
 
 if (eventData.success) {
   const event = eventData.payload[0];
   const [lon, lat] = event.geometry.coordinates;
-  
+
   // Step 2: Find nearby earthquakes using location endpoint
   const nearbyResponse = await fetch(
     `https://api.terraquakeapi.com/v1/earthquakes/location?` +
-    `latitude=${lat}&longitude=${lon}&radius=50`
+      `latitude=${lat}&longitude=${lon}&radius=50`,
   );
   const nearbyData = await nearbyResponse.json();
-  
+
   console.log(`Found ${nearbyData.totalEarthquakes} earthquakes within 50km`);
 }
 ```

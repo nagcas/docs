@@ -1,12 +1,12 @@
 ---
-title: "GET /stations"
-description: "Retrieve all seismic monitoring stations from the INGV network"
+title: 'GET v1/stations'
+description: 'Retrieve all seismic monitoring stations from the INGV network'
 ---
 
 ## Endpoint
 
 ```
-GET https://api.terraquakeapi.com/stations
+GET https://api.terraquakeapi.com/v1/stations
 ```
 
 ## Description
@@ -24,17 +24,21 @@ Supports pagination for efficient data retrieval from the complete network of hu
 
 ## Parameters
 
-<ParamField query="limit" type="integer" default="50">
-  Number of stations to return per page. Must be a positive integer greater than 0.
-  
-  **Maximum**: 1000
-  
-  **Example**: `?limit=100`
+<ParamField
+  query='limit'
+  type='integer'
+  default='50'
+>
+  Number of stations to return per page. Must be a positive integer greater than
+  0. **Maximum**: 1000 **Example**: `?limit=100`
 </ParamField>
 
-<ParamField query="page" type="integer" default="1">
+<ParamField
+  query='page'
+  type='integer'
+  default='1'
+>
   Page number for pagination. Must be a positive integer greater than 0.
-  
   **Example**: `?page=2`
 </ParamField>
 
@@ -43,20 +47,22 @@ Supports pagination for efficient data retrieval from the complete network of hu
 <CodeGroup>
 
 ```bash cURL
-curl "https://api.terraquakeapi.com/stations?limit=50&page=1"
+curl "https://api.terraquakeapi.com/v1/stations?limit=50&page=1"
 ```
 
 ```javascript JavaScript
 const response = await fetch(
-  'https://api.terraquakeapi.com/stations?limit=50&page=1'
+  'https://api.terraquakeapi.com/v1/stations?limit=50&page=1',
 );
 const data = await response.json();
 
 if (data.success) {
   console.log(`Total stations: ${data.totalStations}`);
-  console.log(`Retrieved ${data.payload.length} stations on page ${data.pagination.page}`);
-  
-  data.payload.forEach(station => {
+  console.log(
+    `Retrieved ${data.payload.length} stations on page ${data.pagination.page}`,
+  );
+
+  data.payload.forEach((station) => {
     console.log(`${station.$.code} - ${station.Site.Name}`);
   });
 }
@@ -65,7 +71,7 @@ if (data.success) {
 ```python Python
 import requests
 
-url = "https://api.terraquakeapi.com/stations"
+url = "https://api.terraquakeapi.com/v1/stations"
 params = {"limit": 50, "page": 1}
 
 response = requests.get(url, params=params)
@@ -81,13 +87,13 @@ if data.get('success'):
 
 ```php PHP
 <?php
-$url = "https://api.terraquakeapi.com/stations?limit=50&page=1";
+$url = "https://api.terraquakeapi.com/v1/stations?limit=50&page=1";
 $response = file_get_contents($url);
 $data = json_decode($response, true);
 
 if ($data['success']) {
     echo "Total stations: " . $data['totalStations'] . "\n";
-    
+
     foreach ($data['payload'] as $station) {
         $code = $station['$']['code'];
         $name = $station['Site']['Name'];
@@ -101,62 +107,100 @@ if ($data['success']) {
 
 ## Response Format
 
-<ResponseField name="success" type="boolean">
+<ResponseField
+  name='success'
+  type='boolean'
+>
   Indicates if the request was successful
 </ResponseField>
 
-<ResponseField name="code" type="integer">
+<ResponseField
+  name='code'
+  type='integer'
+>
   HTTP status code (200 for success)
 </ResponseField>
 
-<ResponseField name="status" type="string">
+<ResponseField
+  name='status'
+  type='string'
+>
   HTTP status message
 </ResponseField>
 
-<ResponseField name="message" type="string">
+<ResponseField
+  name='message'
+  type='string'
+>
   Human-readable description of the response
 </ResponseField>
 
-<ResponseField name="payload" type="array">
+<ResponseField
+  name='payload'
+  type='array'
+>
   Array of station objects (see Station Object structure below)
 </ResponseField>
 
-<ResponseField name="totalStations" type="integer">
+<ResponseField
+  name='totalStations'
+  type='integer'
+>
   Total number of stations in the network
 </ResponseField>
 
-<ResponseField name="pagination" type="object">
+<ResponseField
+  name='pagination'
+  type='object'
+>
   Pagination metadata
-  
-  <ResponseField name="page" type="integer">
+  <ResponseField
+    name='page'
+    type='integer'
+  >
     Current page number
   </ResponseField>
-  
-  <ResponseField name="totalPages" type="integer">
+  <ResponseField
+    name='totalPages'
+    type='integer'
+  >
     Total number of pages available
   </ResponseField>
-  
-  <ResponseField name="limit" type="integer">
+  <ResponseField
+    name='limit'
+    type='integer'
+  >
     Number of results per page
   </ResponseField>
-  
-  <ResponseField name="hasMore" type="boolean">
+  <ResponseField
+    name='hasMore'
+    type='boolean'
+  >
     Whether more pages are available
   </ResponseField>
 </ResponseField>
 
-<ResponseField name="meta" type="object">
+<ResponseField
+  name='meta'
+  type='object'
+>
   Request metadata
-  
-  <ResponseField name="method" type="string">
+  <ResponseField
+    name='method'
+    type='string'
+  >
     HTTP method used
   </ResponseField>
-  
-  <ResponseField name="path" type="string">
+  <ResponseField
+    name='path'
+    type='string'
+  >
     Request path
   </ResponseField>
-  
-  <ResponseField name="timestamp" type="string">
+  <ResponseField
+    name='timestamp'
+    type='string'
+  >
     ISO 8601 timestamp of the request
   </ResponseField>
 </ResponseField>
@@ -165,51 +209,83 @@ if ($data['success']) {
 
 Each station in the `payload` array has the following structure:
 
-<ResponseField name="$" type="object">
+<ResponseField
+  name='$'
+  type='object'
+>
   Station metadata attributes
-  
-  <ResponseField name="code" type="string">
+  <ResponseField
+    name='code'
+    type='string'
+  >
     Unique station code (e.g., "ACATE", "IV.ACER")
   </ResponseField>
-  
-  <ResponseField name="name" type="string">
+  <ResponseField
+    name='name'
+    type='string'
+  >
     Station name
   </ResponseField>
-  
-  <ResponseField name="restrictedStatus" type="string">
-    Operational status: "open", "closed", "inactive", "deprecated", or "unavailable"
+  <ResponseField
+    name='restrictedStatus'
+    type='string'
+  >
+    Operational status: "open", "closed", "inactive", "deprecated", or
+    "unavailable"
   </ResponseField>
-  
-  <ResponseField name="startDate" type="string">
+  <ResponseField
+    name='startDate'
+    type='string'
+  >
     ISO 8601 date when the station became operational
   </ResponseField>
-  
-  <ResponseField name="endDate" type="string" optional>
+  <ResponseField
+    name='endDate'
+    type='string'
+    optional
+  >
     ISO 8601 date when the station was closed (if applicable)
   </ResponseField>
 </ResponseField>
 
-<ResponseField name="Latitude" type="float">
+<ResponseField
+  name='Latitude'
+  type='float'
+>
   Station latitude in decimal degrees (-90 to 90)
 </ResponseField>
 
-<ResponseField name="Longitude" type="float">
+<ResponseField
+  name='Longitude'
+  type='float'
+>
   Station longitude in decimal degrees (-180 to 180)
 </ResponseField>
 
-<ResponseField name="Elevation" type="float">
+<ResponseField
+  name='Elevation'
+  type='float'
+>
   Station elevation above sea level in meters
 </ResponseField>
 
-<ResponseField name="Site" type="object">
+<ResponseField
+  name='Site'
+  type='object'
+>
   Site information
-  
-  <ResponseField name="Name" type="string">
+  <ResponseField
+    name='Name'
+    type='string'
+  >
     Human-readable site location name
   </ResponseField>
 </ResponseField>
 
-<ResponseField name="CreationDate" type="string">
+<ResponseField
+  name='CreationDate'
+  type='string'
+>
   ISO 8601 timestamp when the station record was created
 </ResponseField>
 
@@ -255,7 +331,7 @@ Each station in the `payload` array has the following structure:
   ],
   "meta": {
     "method": "GET",
-    "path": "/stations?limit=2&page=1",
+    "path": "/v1/stations?limit=2&page=1",
     "timestamp": "2025-11-06T10:30:15.240Z"
   },
   "totalStations": 450,
@@ -312,13 +388,13 @@ async function getAllStations() {
   const allStations = [];
   let page = 1;
   let hasMore = true;
-  
+
   while (hasMore) {
     const response = await fetch(
-      `https://api.terraquakeapi.com/stations?limit=100&page=${page}`
+      `https://api.terraquakeapi.com/v1/stations?limit=100&page=${page}`,
     );
     const data = await response.json();
-    
+
     if (data.success) {
       allStations.push(...data.payload);
       hasMore = data.pagination.hasMore;
@@ -327,7 +403,7 @@ async function getAllStations() {
       break;
     }
   }
-  
+
   console.log(`Retrieved ${allStations.length} total stations`);
   return allStations;
 }
@@ -336,19 +412,35 @@ async function getAllStations() {
 ## Related Endpoints
 
 <CardGroup cols={2}>
-  <Card title="Get Station by Code" icon="magnifying-glass" href="/api/stations/by-code">
+  <Card
+    title='Get Station by Code'
+    icon='magnifying-glass'
+    href='/api/stations/by-code'
+  >
     Search for a specific station
   </Card>
-  
-  <Card title="GeoJSON Format" icon="map" href="/api/stations/geojson">
+
+  <Card
+    title='GeoJSON Format'
+    icon='map'
+    href='/api/stations/geojson'
+  >
     Get stations for mapping
   </Card>
-  
-  <Card title="Active Stations" icon="circle-check" href="/api/stations/status-open">
+
+  <Card
+    title='Active Stations'
+    icon='circle-check'
+    href='/api/stations/status-open'
+  >
     Filter for operational stations
   </Card>
-  
-  <Card title="Statistics" icon="chart-simple" href="/api/stations/statistics">
+
+  <Card
+    title='Statistics'
+    icon='chart-simple'
+    href='/api/stations/statistics'
+  >
     Get network metrics
   </Card>
 </CardGroup>

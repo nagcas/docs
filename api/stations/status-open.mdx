@@ -1,12 +1,12 @@
 ---
-title: "GET /stations/status/open"
-description: "Retrieve all currently operational seismic monitoring stations"
+title: 'GET v1/stations/status/open'
+description: 'Retrieve all currently operational seismic monitoring stations'
 ---
 
 ## Endpoint
 
 ```
-GET https://api.terraquakeapi.com/stations/status/open
+GET https://api.terraquakeapi.com/v1/stations/status/open
 ```
 
 ## Description
@@ -25,17 +25,21 @@ Ideal for applications that need to work with live data sources or ensure statio
 
 ## Parameters
 
-<ParamField query="limit" type="integer" default="50">
-  Number of stations to return per page. Must be a positive integer greater than 0.
-  
-  **Maximum**: 1000
-  
-  **Example**: `?limit=100`
+<ParamField
+  query='limit'
+  type='integer'
+  default='50'
+>
+  Number of stations to return per page. Must be a positive integer greater than
+  0. **Maximum**: 1000 **Example**: `?limit=100`
 </ParamField>
 
-<ParamField query="page" type="integer" default="1">
+<ParamField
+  query='page'
+  type='integer'
+  default='1'
+>
   Page number for pagination. Must be a positive integer greater than 0.
-  
   **Example**: `?page=2`
 </ParamField>
 
@@ -44,28 +48,31 @@ Ideal for applications that need to work with live data sources or ensure statio
 <CodeGroup>
 
 ```bash cURL
-curl "https://api.terraquakeapi.com/stations/status/open?limit=100&page=1"
+curl "https://api.terraquakeapi.com/v1/stations/status/open?limit=100&page=1"
 ```
 
 ```javascript JavaScript
 const response = await fetch(
-  'https://api.terraquakeapi.com/stations/status/open?limit=100'
+  'https://api.terraquakeapi.com/v1/stations/status/open?limit=100',
 );
 const data = await response.json();
 
 if (data.success) {
   console.log(`Total active stations: ${data.totalStationsOpen}`);
-  console.log(`Retrieved ${data.payload.length} stations on page ${data.pagination.page}`);
-  
+  console.log(
+    `Retrieved ${data.payload.length} stations on page ${data.pagination.page}`,
+  );
+
   // Map active station codes
-  const activeCodes = data.payload.map(station => station.$.code);
+  const activeCodes = data.payload.map((station) => station.$.code);
   console.log('Active station codes:', activeCodes);
-  
+
   // Find stations by region
-  const sicilianStations = data.payload.filter(station => 
-    station.Site.Name.includes('(CT)') || 
-    station.Site.Name.includes('(RG)') ||
-    station.Site.Name.includes('(ME)')
+  const sicilianStations = data.payload.filter(
+    (station) =>
+      station.Site.Name.includes('(CT)') ||
+      station.Site.Name.includes('(RG)') ||
+      station.Site.Name.includes('(ME)'),
   );
   console.log(`Active Sicilian stations: ${sicilianStations.length}`);
 }
@@ -74,7 +81,7 @@ if (data.success) {
 ```python Python
 import requests
 
-url = "https://api.terraquakeapi.com/stations/status/open"
+url = "https://api.terraquakeapi.com/v1/stations/status/open"
 params = {"limit": 100, "page": 1}
 
 response = requests.get(url, params=params)
@@ -82,7 +89,7 @@ data = response.json()
 
 if data.get('success'):
     print(f"Total active stations: {data.get('totalStationsOpen')}")
-    
+
     # Group by region (from site name)
     regions = {}
     for station in data.get('payload', []):
@@ -91,7 +98,7 @@ if data.get('success'):
         if '(' in site:
             region = site.split('(')[-1].strip(')')
             regions[region] = regions.get(region, 0) + 1
-    
+
     print("\nActive stations by region:")
     for region, count in sorted(regions.items()):
         print(f"{region}: {count}")
@@ -99,19 +106,19 @@ if data.get('success'):
 
 ```php PHP
 <?php
-$url = "https://api.terraquakeapi.com/stations/status/open?limit=100";
+$url = "https://api.terraquakeapi.com/v1/stations/status/open?limit=100";
 $response = file_get_contents($url);
 $data = json_decode($response, true);
 
 if ($data['success']) {
     echo "Total active stations: " . $data['totalStationsOpen'] . "\n\n";
-    
+
     foreach ($data['payload'] as $station) {
         $code = $station['$']['code'];
         $name = $station['Site']['Name'];
         $lat = $station['Latitude'];
         $lon = $station['Longitude'];
-        
+
         echo "$code - $name ($lat, $lon)\n";
     }
 }
@@ -122,51 +129,83 @@ if ($data['success']) {
 
 ## Response Format
 
-<ResponseField name="success" type="boolean">
+<ResponseField
+  name='success'
+  type='boolean'
+>
   Indicates if the request was successful
 </ResponseField>
 
-<ResponseField name="code" type="integer">
+<ResponseField
+  name='code'
+  type='integer'
+>
   HTTP status code (200 for success)
 </ResponseField>
 
-<ResponseField name="status" type="string">
+<ResponseField
+  name='status'
+  type='string'
+>
   HTTP status message
 </ResponseField>
 
-<ResponseField name="message" type="string">
+<ResponseField
+  name='message'
+  type='string'
+>
   Human-readable description ("List of active seismic stations")
 </ResponseField>
 
-<ResponseField name="payload" type="array">
+<ResponseField
+  name='payload'
+  type='array'
+>
   Array of active station objects (see Station Object structure)
 </ResponseField>
 
-<ResponseField name="totalStationsOpen" type="integer">
+<ResponseField
+  name='totalStationsOpen'
+  type='integer'
+>
   Total number of currently operational stations
 </ResponseField>
 
-<ResponseField name="pagination" type="object">
+<ResponseField
+  name='pagination'
+  type='object'
+>
   Pagination metadata
-  
-  <ResponseField name="page" type="integer">
+  <ResponseField
+    name='page'
+    type='integer'
+  >
     Current page number
   </ResponseField>
-  
-  <ResponseField name="totalPages" type="integer">
+  <ResponseField
+    name='totalPages'
+    type='integer'
+  >
     Total number of pages available
   </ResponseField>
-  
-  <ResponseField name="limit" type="integer">
+  <ResponseField
+    name='limit'
+    type='integer'
+  >
     Number of results per page
   </ResponseField>
-  
-  <ResponseField name="hasMore" type="boolean">
+  <ResponseField
+    name='hasMore'
+    type='boolean'
+  >
     Whether more pages are available
   </ResponseField>
 </ResponseField>
 
-<ResponseField name="meta" type="object">
+<ResponseField
+  name='meta'
+  type='object'
+>
   Request metadata (method, path, timestamp)
 </ResponseField>
 
@@ -174,45 +213,74 @@ if ($data['success']) {
 
 Each station object has the following structure:
 
-<ResponseField name="$" type="object">
+<ResponseField
+  name='$'
+  type='object'
+>
   Station metadata attributes
-  
-  <ResponseField name="code" type="string">
+  <ResponseField
+    name='code'
+    type='string'
+  >
     Unique station code
   </ResponseField>
-  
-  <ResponseField name="name" type="string">
+  <ResponseField
+    name='name'
+    type='string'
+  >
     Full station name with network prefix
   </ResponseField>
-  
-  <ResponseField name="restrictedStatus" type="string">
+  <ResponseField
+    name='restrictedStatus'
+    type='string'
+  >
     Always "open" for this endpoint
   </ResponseField>
-  
-  <ResponseField name="startDate" type="string">
+  <ResponseField
+    name='startDate'
+    type='string'
+  >
     ISO 8601 date when the station became operational
   </ResponseField>
 </ResponseField>
 
-<ResponseField name="Latitude" type="float">
+<ResponseField
+  name='Latitude'
+  type='float'
+>
   Station latitude in decimal degrees
 </ResponseField>
 
-<ResponseField name="Longitude" type="float">
+<ResponseField
+  name='Longitude'
+  type='float'
+>
   Station longitude in decimal degrees
 </ResponseField>
 
-<ResponseField name="Elevation" type="float">
+<ResponseField
+  name='Elevation'
+  type='float'
+>
   Station elevation in meters above sea level
 </ResponseField>
 
-<ResponseField name="Site" type="object">
-  <ResponseField name="Name" type="string">
+<ResponseField
+  name='Site'
+  type='object'
+>
+  <ResponseField
+    name='Name'
+    type='string'
+  >
     Human-readable site location name
   </ResponseField>
 </ResponseField>
 
-<ResponseField name="CreationDate" type="string">
+<ResponseField
+  name='CreationDate'
+  type='string'
+>
   ISO 8601 timestamp when the station record was created
 </ResponseField>
 
@@ -258,7 +326,7 @@ Each station object has the following structure:
   ],
   "meta": {
     "method": "GET",
-    "path": "/stations/status/open?limit=2&page=1",
+    "path": "/v1/stations/status/open?limit=2&page=1",
     "timestamp": "2025-11-06T11:30:45.680Z"
   },
   "totalStationsOpen": 385,
@@ -302,27 +370,31 @@ Each station object has the following structure:
 ```javascript
 async function analyzeNetworkCoverage() {
   const response = await fetch(
-    'https://api.terraquakeapi.com/stations/status/open?limit=500'
+    'https://api.terraquakeapi.com/v1/stations/status/open?limit=500',
   );
   const data = await response.json();
-  
+
   if (data.success) {
     const stations = data.payload;
-    
+
     // Calculate bounding box
-    const lats = stations.map(s => s.Latitude);
-    const lons = stations.map(s => s.Longitude);
-    
+    const lats = stations.map((s) => s.Latitude);
+    const lons = stations.map((s) => s.Longitude);
+
     const bounds = {
       north: Math.max(...lats),
       south: Math.min(...lats),
       east: Math.max(...lons),
-      west: Math.min(...lons)
+      west: Math.min(...lons),
     };
-    
+
     console.log('Active network coverage:');
-    console.log(`Latitude: ${bounds.south.toFixed(2)}° to ${bounds.north.toFixed(2)}°`);
-    console.log(`Longitude: ${bounds.west.toFixed(2)}° to ${bounds.east.toFixed(2)}°`);
+    console.log(
+      `Latitude: ${bounds.south.toFixed(2)}° to ${bounds.north.toFixed(2)}°`,
+    );
+    console.log(
+      `Longitude: ${bounds.west.toFixed(2)}° to ${bounds.east.toFixed(2)}°`,
+    );
     console.log(`Total active stations: ${data.totalStationsOpen}`);
   }
 }
@@ -334,7 +406,7 @@ async function analyzeNetworkCoverage() {
 import requests
 import csv
 
-url = "https://api.terraquakeapi.com/stations/status/open"
+url = "https://api.terraquakeapi.com/v1/stations/status/open"
 params = {"limit": 500}
 
 response = requests.get(url, params=params)
@@ -344,7 +416,7 @@ if data.get('success'):
     with open('active_stations.csv', 'w', newline='') as csvfile:
         fieldnames = ['code', 'name', 'latitude', 'longitude', 'elevation', 'site']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-        
+
         writer.writeheader()
         for station in data['payload']:
             writer.writerow({
@@ -355,7 +427,7 @@ if data.get('success'):
                 'elevation': station['Elevation'],
                 'site': station['Site']['Name']
             })
-    
+
     print(f"Exported {len(data['payload'])} active stations to active_stations.csv")
 ```
 
@@ -364,19 +436,23 @@ if data.get('success'):
 ```javascript
 // Find high-altitude active stations
 const response = await fetch(
-  'https://api.terraquakeapi.com/stations/status/open?limit=500'
+  'https://api.terraquakeapi.com/v1/stations/status/open?limit=500',
 );
 const data = await response.json();
 
 if (data.success) {
   const highAltitudeStations = data.payload.filter(
-    station => station.Elevation > 1000
+    (station) => station.Elevation > 1000,
   );
-  
-  console.log(`High-altitude stations (>1000m): ${highAltitudeStations.length}`);
-  
-  highAltitudeStations.forEach(station => {
-    console.log(`${station.$.code}: ${station.Elevation}m - ${station.Site.Name}`);
+
+  console.log(
+    `High-altitude stations (>1000m): ${highAltitudeStations.length}`,
+  );
+
+  highAltitudeStations.forEach((station) => {
+    console.log(
+      `${station.$.code}: ${station.Elevation}m - ${station.Site.Name}`,
+    );
   });
 }
 ```
@@ -394,19 +470,35 @@ This endpoint returns only stations with `restrictedStatus: "open"`, which means
 ## Related Endpoints
 
 <CardGroup cols={2}>
-  <Card title="Closed Stations" icon="circle-xmark" href="/api/stations/status-closed">
+  <Card
+    title='Closed Stations'
+    icon='circle-xmark'
+    href='/api/stations/status-closed'
+  >
     Get inactive/historical stations
   </Card>
-  
-  <Card title="Statistics" icon="chart-simple" href="/api/stations/statistics">
+
+  <Card
+    title='Statistics'
+    icon='chart-simple'
+    href='/api/stations/statistics'
+  >
     View open vs closed station counts
   </Card>
-  
-  <Card title="GeoJSON Format" icon="map" href="/api/stations/geojson">
+
+  <Card
+    title='GeoJSON Format'
+    icon='map'
+    href='/api/stations/geojson'
+  >
     Map active stations
   </Card>
-  
-  <Card title="Get All Stations" icon="list" href="/api/stations/get-all">
+
+  <Card
+    title='Get All Stations'
+    icon='list'
+    href='/api/stations/get-all'
+  >
     Browse all stations (open and closed)
   </Card>
 </CardGroup>

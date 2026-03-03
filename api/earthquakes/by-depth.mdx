@@ -38,24 +38,22 @@ Fetches earthquake events at or deeper than a specified depth threshold. This en
   - Returns 400 error if invalid
 </ParamField>
 
-<ParamField query="sort" type="string" default="-time">
-  Sort order for results. Prefix with `-` for descending order.
-  
-  **Allowed values:**
-  - `time` or `-time` (default: descending)
-  - `magnitude` or `-magnitude`
-  - `depth` or `-depth`
+<ParamField
+  query='sort'
+  type='string'
+  default='-time'
+>
+  Sort order for results. Prefix with `-` for descending order. **Allowed
+  values:** - `time` or `-time` (default: descending) - `magnitude` or
+  `-magnitude` - `depth` or `-depth`
 </ParamField>
 
-<ParamField query="fields" type="string">
-  Comma-separated list of fields to include in response.
-  
-  **Allowed values:**
-  - `time`
-  - `magnitude`
-  - `depth`
-  - `place`
-  - `coordinates`
+<ParamField
+  query='fields'
+  type='string'
+>
+  Comma-separated list of fields to include in response. **Allowed values:** -
+  `time` - `magnitude` - `depth` - `place` - `coordinates`
 </ParamField>
 
 ## Request Example
@@ -66,11 +64,14 @@ Fetches earthquake events at or deeper than a specified depth threshold. This en
 curl "https://api.terraquakeapi.com/v1/earthquakes/depth?depth=10"
 
 # Intermediate depth earthquakes (≥70km deep)
+
 curl "https://api.terraquakeapi.com/v1/earthquakes/depth?depth=70&limit=100"
 
 # Deep earthquakes (≥300km deep)
+
 curl "https://api.terraquakeapi.com/v1/earthquakes/depth?depth=300"
-```
+
+````
 
 ```javascript JavaScript
 // Get shallow earthquakes (≤10km)
@@ -92,7 +93,7 @@ if (data.success) {
     console.log(`${mag} - ${place} at ${time} (${depth}km deep)`);
   });
 }
-```
+````
 
 ```python Python
 import requests
@@ -112,19 +113,29 @@ if data.get('success'):
         depth = quake['geometry']['coordinates'][2]
         print(f"{props['mag']} - {props['place']} at {props['time']} ({depth}km deep)")
 ```
+
 </CodeGroup>
 
 ## Response
 
-<ResponseField name="success" type="boolean">
+<ResponseField
+  name='success'
+  type='boolean'
+>
   Indicates if the request was successful
 </ResponseField>
 
-<ResponseField name="code" type="integer">
+<ResponseField
+  name='code'
+  type='integer'
+>
   HTTP status code (200 for success)
 </ResponseField>
 
-<ResponseField name="status" type="string">
+<ResponseField
+  name='status'
+  type='string'
+>
   HTTP status message ("OK" for success)
 </ResponseField>
 
@@ -132,19 +143,32 @@ if data.get('success'):
   Human-readable message. Format: "Earthquake events with depth > {depthValue} km"
 </ResponseField>
 
-<ResponseField name="payload" type="array">
-  Array of GeoJSON Feature objects. Depth is stored in `geometry.coordinates[2]` (third element of coordinates array)
+<ResponseField
+  name='payload'
+  type='array'
+>
+  Array of GeoJSON Feature objects. Depth is stored in `geometry.coordinates[2]`
+  (third element of coordinates array)
 </ResponseField>
 
-<ResponseField name="meta" type="object">
+<ResponseField
+  name='meta'
+  type='object'
+>
   Request metadata containing method, path, and timestamp
 </ResponseField>
 
-<ResponseField name="totalEarthquakes" type="integer">
+<ResponseField
+  name='totalEarthquakes'
+  type='integer'
+>
   Total count of earthquakes at or deeper than specified depth
 </ResponseField>
 
-<ResponseField name="pagination" type="object">
+<ResponseField
+  name='pagination'
+  type='object'
+>
   Pagination details with page, totalPages, limit, and hasMore
 </ResponseField>
 
@@ -241,22 +265,28 @@ if data.get('success'):
 ## Earthquake Depth Classification
 
 <CardGroup cols={3}>
-  <Card title="Shallow" icon="layer-group">
-    **0-70 km**
-    
-    Most common type. Occur in Earth's crust. Can cause significant damage due to proximity to surface.
+  <Card
+    title='Shallow'
+    icon='layer-group'
+  >
+    **0-70 km** Most common type. Occur in Earth's crust. Can cause significant
+    damage due to proximity to surface.
   </Card>
-  
-  <Card title="Intermediate" icon="layer-group">
-    **70-300 km**
-    
-    Occur in subduction zones. Less common but can still be felt at surface.
+
+  <Card
+    title='Intermediate'
+    icon='layer-group'
+  >
+    **70-300 km** Occur in subduction zones. Less common but can still be felt
+    at surface.
   </Card>
-  
-  <Card title="Deep" icon="layer-group">
-    **300-700 km**
-    
-    Occur in subduction zones. Rare and typically less damaging at surface.
+
+  <Card
+    title='Deep'
+    icon='layer-group'
+  >
+    **300-700 km** Occur in subduction zones. Rare and typically less damaging
+    at surface.
   </Card>
 </CardGroup>
 

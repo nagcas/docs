@@ -29,24 +29,22 @@ Fetches all earthquake events that occurred on the current calendar day in UTC t
   - Returns 400 error if invalid
 </ParamField>
 
-<ParamField query="sort" type="string" default="-time">
-  Sort order for results. Prefix with `-` for descending order.
-  
-  **Allowed values:**
-  - `time` or `-time` (default: descending)
-  - `magnitude` or `-magnitude`
-  - `depth` or `-depth`
+<ParamField
+  query='sort'
+  type='string'
+  default='-time'
+>
+  Sort order for results. Prefix with `-` for descending order. **Allowed
+  values:** - `time` or `-time` (default: descending) - `magnitude` or
+  `-magnitude` - `depth` or `-depth`
 </ParamField>
 
-<ParamField query="fields" type="string">
-  Comma-separated list of fields to include in response.
-  
-  **Allowed values:**
-  - `time`
-  - `magnitude`
-  - `depth`
-  - `place`
-  - `coordinates`
+<ParamField
+  query='fields'
+  type='string'
+>
+  Comma-separated list of fields to include in response. **Allowed values:** -
+  `time` - `magnitude` - `depth` - `place` - `coordinates`
 </ParamField>
 
 ## Request Example
@@ -58,13 +56,13 @@ curl "https://api.terraquakeapi.com/v1/earthquakes/today?limit=50"
 
 ```javascript JavaScript
 const response = await fetch(
-  'https://api.terraquakeapi.com/v1/earthquakes/today?limit=50'
+  'https://api.terraquakeapi.com/v1/earthquakes/today?limit=50',
 );
 const data = await response.json();
 
 if (data.success) {
   console.log(`Total earthquakes today: ${data.totalEarthquakes}`);
-  data.payload.forEach(quake => {
+  data.payload.forEach((quake) => {
     const { mag, place, time } = quake.properties;
     console.log(`${mag} - ${place} at ${time}`);
   });
@@ -86,56 +84,72 @@ if data.get('success'):
         props = quake['properties']
         print(f"{props['mag']} - {props['place']} at {props['time']}")
 ```
+
 </CodeGroup>
 
 ## Response
 
-<ResponseField name="success" type="boolean">
+<ResponseField
+  name='success'
+  type='boolean'
+>
   Indicates if the request was successful
 </ResponseField>
 
-<ResponseField name="code" type="integer">
+<ResponseField
+  name='code'
+  type='integer'
+>
   HTTP status code (200 for success)
 </ResponseField>
 
-<ResponseField name="status" type="string">
+<ResponseField
+  name='status'
+  type='string'
+>
   HTTP status message ("OK" for success)
 </ResponseField>
 
-<ResponseField name="message" type="string">
+<ResponseField
+  name='message'
+  type='string'
+>
   Human-readable message: "Earthquake events for today"
 </ResponseField>
 
-<ResponseField name="payload" type="array">
-  Array of GeoJSON Feature objects. Each feature contains:
-  
-  **Properties:**
-  - `eventId` (integer) - Unique event identifier
-  - `originId` (integer) - Origin identifier
-  - `time` (string) - ISO 8601 timestamp
-  - `author` (string) - Reporting agency
-  - `magType` (string) - Magnitude type (ML, Mw, etc.)
-  - `mag` (float) - Magnitude value
-  - `magAuthor` (string) - Magnitude author
-  - `type` (string) - Event type ("earthquake")
-  - `place` (string) - Location description
-  - `version` (integer) - Version number
-  - `geojson_creationTime` (string) - GeoJSON creation time
-  
-  **Geometry:**
-  - `type` (string) - Always "Point"
-  - `coordinates` (array) - [longitude, latitude, depth in km]
+<ResponseField
+  name='payload'
+  type='array'
+>
+  Array of GeoJSON Feature objects. Each feature contains: **Properties:** -
+  `eventId` (integer) - Unique event identifier - `originId` (integer) - Origin
+  identifier - `time` (string) - ISO 8601 timestamp - `author` (string) -
+  Reporting agency - `magType` (string) - Magnitude type (ML, Mw, etc.) - `mag`
+  (float) - Magnitude value - `magAuthor` (string) - Magnitude author - `type`
+  (string) - Event type ("earthquake") - `place` (string) - Location description
+  - `version` (integer) - Version number - `geojson_creationTime` (string) -
+  GeoJSON creation time **Geometry:** - `type` (string) - Always "Point" -
+  `coordinates` (array) - [longitude, latitude, depth in km]
 </ResponseField>
 
-<ResponseField name="meta" type="object">
+<ResponseField
+  name='meta'
+  type='object'
+>
   Request metadata containing method, path, and timestamp
 </ResponseField>
 
-<ResponseField name="totalEarthquakes" type="integer">
+<ResponseField
+  name='totalEarthquakes'
+  type='integer'
+>
   Total count of earthquakes that occurred today
 </ResponseField>
 
-<ResponseField name="pagination" type="object">
+<ResponseField
+  name='pagination'
+  type='object'
+>
   Pagination details with page, totalPages, limit, and hasMore
 </ResponseField>
 
